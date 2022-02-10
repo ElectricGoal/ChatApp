@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/models/models.dart';
 import 'package:chat_app/screens/screens.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -24,6 +27,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final ImagePicker _picker = ImagePicker();
+  var _image;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,11 +70,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget buildProfile() {
     return Column(
       children: [
-        const Icon(
-          Icons.account_circle,
-          size: 120,
-          color: Colors.amber,
+        _image == null
+            ? const Icon(
+                Icons.account_circle,
+                //size: 120,
+                size: 120,
+                color: Colors.amber,
+              )
+            : Container(
+                height: 120,
+                width: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    fit: BoxFit.cover,
+                    image: FileImage(_image),
+                  ),
+                ),
+              ),
+        const SizedBox(
+          height: 5,
         ),
+        buildChangeAvatarButton(),
         const SizedBox(
           height: 25,
         ),
@@ -125,6 +147,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  Widget buildChangeAvatarButton() {
+    return ElevatedButton(
+      child: const Text(
+        'Change avatar',
+        style: TextStyle(
+          fontSize: 14,
+        ),
+      ),
+      style: ButtonStyle(
+        foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+        backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: const BorderSide(
+              color: Colors.green,
+            ),
+          ),
+        ),
+      ),
+      onPressed: () {
+        pickImage();
+      },
+    );
+  }
+
+  Future<void> pickImage() async {
+    XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _image = File(image.path);
+      });
+    }
   }
 
   Widget buildDarkModeSwitch(BuildContext context) {
