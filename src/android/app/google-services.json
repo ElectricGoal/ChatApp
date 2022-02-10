@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "734105648681",
+    "project_id": "chatapp-56655",
+    "storage_bucket": "chatapp-56655.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:734105648681:android:2c442bc7fc909c0ecba638",
+        "android_client_info": {
+          "package_name": "com.electricgoal.chat_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "734105648681-53cc9154c7ofqns4gjjceatf9bgjmp4a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.electricgoal.chat_app",
+            "certificate_hash": "a05e8e48e0e4886dbe2328cec6014e86320563ae"
+          }
+        },
+        {
+          "client_id": "734105648681-1vl9t12g0tmqns83virhogrp1jqhp7ei.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1ExhovqVmnwMHl07coNVCRhfwwpVijPk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "734105648681-1vl9t12g0tmqns83virhogrp1jqhp7ei.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
