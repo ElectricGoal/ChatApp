@@ -197,8 +197,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
 
-    //print(_image!.path.split('/').last);
-    //uploadImg();
   }
 
   Future<void> uploadImg() async {
@@ -226,7 +224,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     Provider.of<ProfileManager>(context, listen: false).updateAvatar(picUrl!);
 
-    print(picUrl);
   }
 
   Future<void> updateData(String picUrl) async {
