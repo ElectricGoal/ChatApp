@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:chat_app/api/firebase_api.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/models/models.dart';
 import 'package:chat_app/screens/screens.dart';
@@ -28,7 +31,10 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final ImagePicker _picker = ImagePicker();
-  var _image;
+  File? _image;
+  UploadTask? task;
+  String? picUrl;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,7 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget buildProfile() {
     return Column(
       children: [
-        _image == null
+        widget.user.avatarUrl == 'none'
             ? const Icon(
                 Icons.account_circle,
                 //size: 120,
@@ -84,7 +90,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   shape: BoxShape.circle,
                   image: DecorationImage(
                     fit: BoxFit.cover,
-                    image: FileImage(_image),
+                    //image: FileImage(_image!),
+                    image: NetworkImage(widget.user.avatarUrl!),
                   ),
                 ),
               ),
@@ -169,19 +176,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-      onPressed: () {
-        pickImage();
+      onPressed: () async {
+        await pickImage();
+        await uploadImg();
+        await updateData(picUrl!);
       },
     );
   }
 
   Future<void> pickImage() async {
-    XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxHeight: 480,
+      maxWidth: 640,
+      imageQuality: 50,
+    );
     if (image != null) {
       setState(() {
         _image = File(image.path);
       });
     }
+
+    //print(_image!.path.split('/').last);
+    //uploadImg();
+  }
+
+  Future<void> uploadImg() async {
+    if (_image == null) {
+      return;
+    }
+
+    final fileName = "${widget.user.uid}.jpg";
+
+    final destination = "profilePics/$fileName";
+
+    task = FirebaseApi.uploadFile(destination, _image!);
+    setState(() {});
+
+    if (task == null) {
+      return;
+    }
+
+    final snapshot = await task!.whenComplete(() {});
+    picUrl = await snapshot.ref.getDownloadURL();
+
+    if (picUrl == null) {
+      return;
+    }
+
+    Provider.of<ProfileManager>(context, listen: false).updateAvatar(picUrl!);
+
+    print(picUrl);
+  }
+
+  Future<void> updateData(String picUrl) async {
+    FirebaseFirestore.instance
+        .collection("users")
+        .doc(widget.user.uid)
+        .update({'avatarUrl': picUrl});
   }
 
   Widget buildDarkModeSwitch(BuildContext context) {

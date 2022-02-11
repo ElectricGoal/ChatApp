@@ -394,6 +394,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       firstName: firstNameController.text,
       lastName: lastNameController.text,
       email: currentUser.email,
+      avatarUrl: 'none',
     );
 
     await firebaseFirestore

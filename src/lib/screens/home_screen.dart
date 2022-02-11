@@ -33,77 +33,79 @@ class _HomeState extends State<Home> {
 
   User? user = FirebaseAuth.instance.currentUser;
   UserModel loggedInUser = UserModel(
-    uid: 'None',
-    firstName: 'None',
-    lastName: 'None',
-    email: 'None',
+    uid: 'none',
+    firstName: 'none',
+    lastName: 'none',
+    email: 'none',
+    avatarUrl: 'none',
   );
 
   @override
   Widget build(BuildContext context) {
     return Material(
       child: StreamBuilder<DocumentSnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection("users")
-              .doc(user!.uid)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(
-                child: CircularProgressIndicator(
-                  backgroundColor: Colors.greenAccent,
+        stream: FirebaseFirestore.instance
+            .collection("users")
+            .doc(user!.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(
+              child: CircularProgressIndicator(
+                backgroundColor: Colors.greenAccent,
+              ),
+            );
+          }
+          final data = snapshot.data;
+          loggedInUser = UserModel.fromMap(data);
+          //print(loggedInUser.firstName);
+          Provider.of<ProfileManager>(context, listen: true)
+              .getDataUser(loggedInUser);
+          return Consumer<AppStateManager>(
+            builder: (
+              context,
+              appStateManager,
+              child,
+            ) {
+              return Scaffold(
+                appBar: AppBar(
+                  backgroundColor: Colors.green,
+                  title: const Text("Chat!"),
+                  actions: [
+                    profileButton(),
+                  ],
+                ),
+                body: IndexedStack(
+                  index: widget.currentTab,
+                  children: pages,
+                ),
+                bottomNavigationBar: BottomNavigationBar(
+                  selectedItemColor: Colors.green,
+                  currentIndex: widget.currentTab,
+                  onTap: (index) {
+                    Provider.of<AppStateManager>(context, listen: false)
+                        .goToTab(index);
+                  },
+                  items: const <BottomNavigationBarItem>[
+                    BottomNavigationBarItem(
+                      label: 'Tab 0',
+                      icon: Icon(Icons.explore),
+                    ),
+                    BottomNavigationBarItem(
+                      label: 'Tab 1',
+                      icon: Icon(Icons.book),
+                    ),
+                    BottomNavigationBarItem(
+                      label: 'Tab 2',
+                      icon: Icon(Icons.list),
+                    ),
+                  ],
                 ),
               );
-            }
-            final data = snapshot.data;
-            loggedInUser = UserModel.fromMap(data);
-            //print(loggedInUser.firstName);
-            Provider.of<ProfileManager>(context, listen: true)
-                .getDataUser(loggedInUser);
-            return Consumer<AppStateManager>(
-              builder: (
-                context,
-                appStateManager,
-                child,
-              ) {
-                return Scaffold(
-                  appBar: AppBar(
-                    backgroundColor: Colors.green,
-                    title: const Text("Chat!"),
-                    actions: [
-                      profileButton(),
-                    ],
-                  ),
-                  body: IndexedStack(
-                    index: widget.currentTab,
-                    children: pages,
-                  ),
-                  bottomNavigationBar: BottomNavigationBar(
-                    selectedItemColor: Colors.green,
-                    currentIndex: widget.currentTab,
-                    onTap: (index) {
-                      Provider.of<AppStateManager>(context, listen: false)
-                          .goToTab(index);
-                    },
-                    items: const <BottomNavigationBarItem>[
-                      BottomNavigationBarItem(
-                        label: 'Tab 0',
-                        icon: Icon(Icons.explore),
-                      ),
-                      BottomNavigationBarItem(
-                        label: 'Tab 1',
-                        icon: Icon(Icons.book),
-                      ),
-                      BottomNavigationBarItem(
-                        label: 'Tab 2',
-                        icon: Icon(Icons.list),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          }),
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -111,11 +113,23 @@ class _HomeState extends State<Home> {
     return Padding(
       padding: const EdgeInsets.only(right: 16),
       child: InkWell(
-        child: const Icon(
-          Icons.account_circle,
-          size: 40,
-          color: Colors.white,
-        ),
+        child: loggedInUser.avatarUrl == 'none'
+            ? const Icon(
+                Icons.account_circle,
+                size: 40,
+                color: Colors.white,
+              )
+            : Container(
+                height: 40,
+                width: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    fit: BoxFit.cover,
+                    image: NetworkImage(loggedInUser.avatarUrl!),
+                  ),
+                ),
+              ),
         onTap: () {
           Provider.of<ProfileManager>(context, listen: false)
               .tapOnProfile(true);

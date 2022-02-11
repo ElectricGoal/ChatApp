@@ -3,10 +3,11 @@ import 'package:chat_app/models/user.dart';
 
 class ProfileManager extends ChangeNotifier {
   UserModel user = UserModel(
-    uid: 'None',
-    firstName: 'None',
-    lastName: 'None',
-    email: 'None',
+    uid: 'none',
+    firstName: 'none',
+    lastName: 'none',
+    email: 'none',
+    avatarUrl: 'none',
   );
   UserModel get getUser => user;
 
@@ -34,12 +35,19 @@ class ProfileManager extends ChangeNotifier {
     user = loggedInUser;
   }
 
+  void updateAvatar(String picUrl) {
+    user.avatarUrl = picUrl;
+
+    notifyListeners();
+  }
+
   void logout() {
     user = UserModel(
-      uid: 'None',
-      firstName: 'None',
-      lastName: 'None',
-      email: 'None',
+      uid: 'none',
+      firstName: 'none',
+      lastName: 'none',
+      email: 'none',
+      avatarUrl: 'none',
     );
   }
 }
