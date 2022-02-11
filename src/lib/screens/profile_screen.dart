@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/api/firebase_api.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -81,25 +82,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget buildProfile() {
     return Column(
       children: [
-        widget.user.avatarUrl == 'none'
-            ? const Icon(
-                Icons.account_circle,
-                //size: 120,
-                size: 120,
-                color: Colors.amber,
-              )
-            : Container(
-                height: 120,
-                width: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                    fit: BoxFit.cover,
-                    //image: FileImage(_image!),
-                    image: NetworkImage(widget.user.avatarUrl!),
-                  ),
-                ),
+        if (widget.user.avatarUrl == 'none')
+          const Icon(
+            Icons.account_circle,
+            //size: 120,
+            size: 120,
+            color: Colors.amber,
+          )
+        else
+          Container(
+            height: 120,
+            width: 120,
+            decoration: BoxDecoration(
+              color: Colors.grey,
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                fit: BoxFit.cover,
+                //image: FileImage(_image!),
+                image: Image(
+                  image: CachedNetworkImageProvider(widget.user.avatarUrl!),
+                ).image,
               ),
+            ),
+          ),
         const SizedBox(
           height: 5,
         ),
@@ -230,7 +235,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     Provider.of<ProfileManager>(context, listen: false).updateAvatar(picUrl!);
-    
   }
 
   Future<void> updateData(String picUrl) async {
