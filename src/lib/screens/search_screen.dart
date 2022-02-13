@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/models/models.dart';
+import 'package:chat_app/screens/user_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +14,7 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  final navigatorKey = GlobalKey<NavigatorState>();
   final TextEditingController _textController = TextEditingController();
   late StreamController _streamController;
   late Stream _stream;
@@ -53,7 +55,7 @@ class _SearchScreenState extends State<SearchScreen> {
             Expanded(
               child: StreamBuilder(
                 stream: _stream,
-                builder: (BuildContext context, AsyncSnapshot snapshot) {
+                builder: (_, AsyncSnapshot snapshot) {
                   if (snapshot.hasError) {
                     return _errorCase();
                   }
@@ -67,7 +69,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     case 'waiting':
                       return _waitingCase();
                     default:
-                      return buildUsersList(snapshot);
+                      return buildUsersList(snapshot, context);
                   }
                 },
               ),
@@ -168,12 +170,12 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget buildUsersList(AsyncSnapshot snapshot) {
+  Widget buildUsersList(AsyncSnapshot snapshot, BuildContext context) {
     final List<UserModel> users = snapshot.data;
     //print(users);
     return ListView.builder(
       itemCount: users.length,
-      itemBuilder: (context, index) {
+      itemBuilder: (_, index) {
         return ListTile(
           leading: users[index].avatarUrl == 'none'
               ? const Icon(
@@ -197,6 +199,14 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 ),
           title: Text(users[index].firstName! + ' ' + users[index].lastName!),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => UserScreen(user: users[index],),
+              ),
+            );
+          },
         );
       },
     );
