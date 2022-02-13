@@ -28,7 +28,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   static List<Widget> pages = const [
     Tab0Screen(),
-    Tab1Screen(),
+    SearchScreen(),
     Tab2Screen(),
   ];
 
@@ -53,7 +53,7 @@ class _HomeState extends State<Home> {
           if (!snapshot.hasData) {
             return const Center(
               child: CircularProgressIndicator(
-                backgroundColor: Colors.greenAccent,
+                color: Colors.greenAccent,
               ),
             );
           }
@@ -93,12 +93,12 @@ class _HomeState extends State<Home> {
                       icon: Icon(Icons.explore),
                     ),
                     BottomNavigationBarItem(
-                      label: 'Tab 1',
-                      icon: Icon(Icons.book),
+                      label: 'Search',
+                      icon: Icon(Icons.search),
                     ),
                     BottomNavigationBarItem(
-                      label: 'Tab 2',
-                      icon: Icon(Icons.list),
+                      label: 'Tab2',
+                      icon: Icon(Icons.format_list_bulleted),
                     ),
                   ],
                 ),
@@ -108,6 +108,69 @@ class _HomeState extends State<Home> {
         },
       ),
     );
+    // return Consumer<AppStateManager>(
+    //   builder: (
+    //     context,
+    //     appStateManager,
+    //     child,
+    //   ) {
+    //     return Scaffold(
+    //       appBar: AppBar(
+    //         backgroundColor: Colors.green,
+    //         title: const Text("Chat!"),
+    //         actions: [
+    //           profileButton(),
+    //         ],
+    //       ),
+    //       body: StreamBuilder<DocumentSnapshot>(
+    //         stream: FirebaseFirestore.instance
+    //             .collection("users")
+    //             .doc(user!.uid)
+    //             .snapshots(),
+    //         builder: (context, snapshot) {
+    //           if (!snapshot.hasData) {
+    //             return const Center(
+    //               child: CircularProgressIndicator(
+    //                 backgroundColor: Colors.greenAccent,
+    //               ),
+    //             );
+    //           }
+    //           final data = snapshot.data;
+    //           loggedInUser = UserModel.fromMap(data);
+    //           //print(loggedInUser.firstName);
+    //           Provider.of<ProfileManager>(context, listen: true)
+    //               .getDataUser(loggedInUser);
+    //           return IndexedStack(
+    //             index: widget.currentTab,
+    //             children: pages,
+    //           );
+    //         },
+    //       ),
+    //       bottomNavigationBar: BottomNavigationBar(
+    //         selectedItemColor: Colors.green,
+    //         currentIndex: widget.currentTab,
+    //         onTap: (index) {
+    //           Provider.of<AppStateManager>(context, listen: false)
+    //               .goToTab(index);
+    //         },
+    //         items: <BottomNavigationBarItem>[
+    //           const BottomNavigationBarItem(
+    //             label: 'Tab 0',
+    //             icon: Icon(Icons.explore),
+    //           ),
+    //           const BottomNavigationBarItem(
+    //             label: 'Tab 1',
+    //             icon: Icon(Icons.search),
+    //           ),
+    //           BottomNavigationBarItem(
+    //             label: 'Tab 2',
+    //             icon: avatar(),
+    //           ),
+    //         ],
+    //       ),
+    //     );
+    //   },
+    // );
   }
 
   Widget profileButton() {
@@ -135,11 +198,6 @@ class _HomeState extends State<Home> {
                   ),
                 ),
               ),
-        // : CachedNetworkImage(
-        //     imageUrl: loggedInUser.avatarUrl!,
-        //     placeholder: (context, url) => const CircularProgressIndicator(),
-        //     errorWidget: (context, url, error) => const Icon(Icons.error),
-        //   ),
         onTap: () {
           Provider.of<ProfileManager>(context, listen: false)
               .tapOnProfile(true);
@@ -147,4 +205,5 @@ class _HomeState extends State<Home> {
       ),
     );
   }
+
 }
