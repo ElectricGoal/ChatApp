@@ -86,14 +86,12 @@ class _SearchScreenState extends State<SearchScreen> {
 
     await _firestore
         .collection("users")
-        //.where("email", arrayContains: "t")
         .get()
         .then(
       (QuerySnapshot querySnapshot) {
         for (var doc in querySnapshot.docs) {
           String name = doc["firstName"] + ' ' + doc["lastName"];
           if (name.toLowerCase().contains(_textController.text)) {
-            //print(name);
             UserModel user = UserModel.fromMap(doc);
             users.add(user);
           }
@@ -105,7 +103,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _search() async {
-    if (_textController.text == null || _textController.text.isEmpty) {
+    if (_textController.text.isEmpty) {
       _streamController.add(null);
       return;
     }
@@ -113,8 +111,6 @@ class _SearchScreenState extends State<SearchScreen> {
     _streamController.add('waiting');
 
     final List<UserModel> users = await onSearchUserName();
-
-    //print(users);
 
     if (users.isEmpty) {
       _streamController.add('no data');

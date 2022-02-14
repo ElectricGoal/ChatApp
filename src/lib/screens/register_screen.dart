@@ -280,6 +280,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (!regex.hasMatch(value)) {
           return ("Enter Valid Password(Min: 6 Characters)");
         }
+        return null;
       },
       onSaved: (value) {
         passwordController.text = value!;
