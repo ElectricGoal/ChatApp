@@ -57,23 +57,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0.0,
-        leading: GestureDetector(
-          child: const Icon(
-            Icons.chevron_left,
-            size: 35,
+    return ModalProgressHUD(
+      inAsyncCall: showSpinner,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0.0,
+          leading: GestureDetector(
+            child: const Icon(
+              Icons.chevron_left,
+              size: 35,
+            ),
+            onTap: () {
+              Navigator.pop(context, true);
+            },
           ),
-          onTap: () {
-            Navigator.pop(context, true);
-          },
         ),
-      ),
-      body: ModalProgressHUD(
-        inAsyncCall: showSpinner,
-        child: SingleChildScrollView(
+        body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Form(
             key: _formKey,
@@ -280,6 +280,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (!regex.hasMatch(value)) {
           return ("Enter Valid Password(Min: 6 Characters)");
         }
+        return null;
       },
       onSaved: (value) {
         passwordController.text = value!;

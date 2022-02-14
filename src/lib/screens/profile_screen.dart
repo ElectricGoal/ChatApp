@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/api/firebase_api.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:chat_app/models/models.dart';
 import 'package:chat_app/screens/screens.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -34,39 +36,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? _image;
   UploadTask? task;
   String? picUrl;
+  bool showSpinner = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.close,
+    return ModalProgressHUD(
+      inAsyncCall: showSpinner,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.close,
+            ),
+            onPressed: () {
+              Provider.of<ProfileManager>(context, listen: false)
+                  .tapOnProfile(false);
+            },
           ),
-          onPressed: () {
-            Provider.of<ProfileManager>(context, listen: false)
-                .tapOnProfile(false);
-          },
+          actions: [
+            buildLogoutButton(),
+          ],
         ),
-        actions: [
-          buildLogoutButton(),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              buildProfile(),
-              const SizedBox(
-                height: 14,
-              ),
-              buildDarkModeSwitch(context),
-            ],
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                buildProfile(),
+                const SizedBox(
+                  height: 14,
+                ),
+                buildDarkModeSwitch(context),
+              ],
+            ),
           ),
         ),
       ),
@@ -76,25 +82,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget buildProfile() {
     return Column(
       children: [
-        widget.user.avatarUrl == 'none'
-            ? const Icon(
-                Icons.account_circle,
-                //size: 120,
-                size: 120,
-                color: Colors.amber,
-              )
-            : Container(
-                height: 120,
-                width: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                    fit: BoxFit.cover,
-                    //image: FileImage(_image!),
-                    image: NetworkImage(widget.user.avatarUrl!),
-                  ),
-                ),
+        if (widget.user.avatarUrl == 'none')
+          const Icon(
+            Icons.account_circle,
+            //size: 120,
+            size: 120,
+            color: Colors.amber,
+          )
+        else
+          Container(
+            height: 120,
+            width: 120,
+            decoration: BoxDecoration(
+              color: Colors.grey,
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                fit: BoxFit.cover,
+                //image: FileImage(_image!),
+                image: Image(
+                  image: CachedNetworkImageProvider(widget.user.avatarUrl!),
+                ).image,
               ),
+            ),
+          ),
         const SizedBox(
           height: 5,
         ),
@@ -178,6 +188,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       onPressed: () async {
         await pickImage();
+        setState(() {
+          showSpinner = true;
+        });
         await uploadImg();
         await updateData(picUrl!);
       },
@@ -196,9 +209,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _image = File(image.path);
       });
     }
-
-    //print(_image!.path.split('/').last);
-    //uploadImg();
   }
 
   Future<void> uploadImg() async {
@@ -225,15 +235,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     Provider.of<ProfileManager>(context, listen: false).updateAvatar(picUrl!);
-
-    print(picUrl);
   }
 
   Future<void> updateData(String picUrl) async {
-    FirebaseFirestore.instance
+    await FirebaseFirestore.instance
         .collection("users")
         .doc(widget.user.uid)
         .update({'avatarUrl': picUrl});
+
+    setState(() {
+      showSpinner = false;
+    });
   }
 
   Widget buildDarkModeSwitch(BuildContext context) {
