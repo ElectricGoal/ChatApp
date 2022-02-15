@@ -35,7 +35,7 @@ class _InitializeScreenState extends State<InitializeScreen> {
             SizedBox(
               height: 200,
               child: Image.asset(
-                'assets/logo.jpg',
+                'assets/logo.png',
                 fit: BoxFit.contain,
               ),
             ),
