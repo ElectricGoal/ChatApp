@@ -1,3 +1,4 @@
+import 'package:chat_app/validation/validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -60,191 +61,149 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                headerField(),
+                const SizedBox(height: 60),
+                Text(
+                  'Log in.',
+                  style: TextStyle(
+                    fontSize: 50,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[700],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: const [
+                    Expanded(
+                      child: Text(
+                        'Welcome back! Login with your data that you entered during registration',
+                        style: TextStyle(
+                          fontSize: 18,
+                          //fontWeight: FontWeight.bold,
+                          //color: Colors.green[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 100),
-                emailField(),
+                TextFormField(
+                  autofocus: false,
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    return Validator.validateEmail(value);
+                  },
+                  onSaved: (value) {
+                    emailController.text = value!;
+                  },
+                  textInputAction: TextInputAction.next,
+                  cursorColor: color,
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Colors.green,
+                        width: 2,
+                      ),
+                    ),
+                    hintText: 'Email',
+                    hintStyle: focusedStyle,
+                    prefixIcon: Icon(
+                      Icons.mail,
+                      color: Colors.green[400],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 20),
-                passwordField(),
+                TextFormField(
+                  autofocus: false,
+                  controller: passwordController,
+                  obscureText: true,
+                  validator: (value) {
+                    return Validator.validatePassword(value);
+                  },
+                  onSaved: (value) {
+                    passwordController.text = value!;
+                  },
+                  textInputAction: TextInputAction.done,
+                  cursorColor: color,
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Colors.green,
+                        width: 2,
+                      ),
+                    ),
+                    hintText: 'Password',
+                    hintStyle: focusedStyle,
+                    prefixIcon: Icon(
+                      Icons.vpn_key,
+                      color: Colors.green[400],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 30),
-                buildLoginButton(context),
+                SizedBox(
+                  height: 55,
+                  child: MaterialButton(
+                    color: color,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0)),
+                    child: const Text(
+                      'Login',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    onPressed: () async {
+                      if (!_formKey.currentState!.validate()) {
+                        return;
+                      }
+                      setState(() {
+                        showSpinner = true;
+                      });
+                      signIn(emailController.text, passwordController.text);
+                    },
+                  ),
+                ),
                 const SizedBox(height: 20),
-                buildSignUpButton(context),
+                SizedBox(
+                  height: 55,
+                  child: MaterialButton(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      side: const BorderSide(
+                        color: Colors.green,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: const Text(
+                      'Don\'t have an account, Sign Up here',
+                      style: TextStyle(color: Colors.green),
+                    ),
+                    onPressed: () async {
+                      Provider.of<AppStateManager>(context, listen: false)
+                          .goToRegisterScreen(true);
+                    },
+                  ),
+                ),
                 const SizedBox(height: 20),
-                buildForgotPassButton(context),
+                TextButton(
+                  onPressed: () {
+                    Provider.of<AppStateManager>(context, listen: false)
+                        .resetPass(true);
+                  },
+                  child: const Text(
+                    'Forgot password ?',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget headerField() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 60),
-        Text(
-          'Log in.',
-          style: TextStyle(
-            fontSize: 50,
-            fontWeight: FontWeight.bold,
-            color: Colors.green[700],
-          ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          children: const [
-            Expanded(
-              child: Text(
-                'Welcome back! Login with your data that you entered during registration',
-                style: TextStyle(
-                  fontSize: 18,
-                  //fontWeight: FontWeight.bold,
-                  //color: Colors.green[700],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget buildLoginButton(BuildContext context) {
-    return SizedBox(
-      height: 55,
-      child: MaterialButton(
-        color: color,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-        child: const Text(
-          'Login',
-          style: TextStyle(color: Colors.white),
-        ),
-        onPressed: () async {
-          setState(() {
-            showSpinner = true;
-          });
-          if (!_formKey.currentState!.validate()) {
-            return;
-          }
-          signIn(emailController.text, passwordController.text);
-        },
-      ),
-    );
-  }
-
-  Widget buildSignUpButton(BuildContext context) {
-    return SizedBox(
-      height: 55,
-      child: MaterialButton(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          side: const BorderSide(
-            color: Colors.green,
-            width: 2,
-          ),
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: const Text(
-          'Don\'t have an account, Sign Up here',
-          style: TextStyle(color: Colors.green),
-        ),
-        onPressed: () async {
-          Provider.of<AppStateManager>(context, listen: false)
-              .goToRegisterScreen(true);
-        },
-      ),
-    );
-  }
-
-  Widget emailField() {
-    return TextFormField(
-      autofocus: false,
-      controller: emailController,
-      keyboardType: TextInputType.emailAddress,
-      validator: (value) {
-        if (value!.isEmpty) {
-          return ("Please Enter Your Email");
-        }
-        // reg expression for email validation
-        if (!RegExp("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+.[a-z]").hasMatch(value)) {
-          return ("Please Enter a valid email");
-        }
-        return null;
-      },
-      onSaved: (value) {
-        emailController.text = value!;
-      },
-      textInputAction: TextInputAction.next,
-      cursorColor: color,
-      decoration: InputDecoration(
-        border: const OutlineInputBorder(),
-        focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(
-            color: Colors.green,
-            width: 2,
-          ),
-        ),
-        hintText: 'Email',
-        hintStyle: focusedStyle,
-        prefixIcon: Icon(
-          Icons.mail,
-          color: Colors.green[400],
-        ),
-      ),
-    );
-  }
-
-  Widget passwordField() {
-    return TextFormField(
-      autofocus: false,
-      controller: passwordController,
-      obscureText: true,
-      validator: (value) {
-        RegExp regex = RegExp(r'^.{6,}$');
-        if (value!.isEmpty) {
-          return ("Password is required for login");
-        }
-        if (!regex.hasMatch(value)) {
-          return ("Enter Valid Password(Min. 6 Character)");
-        }
-        return null;
-      },
-      onSaved: (value) {
-        passwordController.text = value!;
-      },
-      textInputAction: TextInputAction.done,
-      cursorColor: color,
-      decoration: InputDecoration(
-        border: const OutlineInputBorder(),
-        focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(
-            color: Colors.green,
-            width: 2,
-          ),
-        ),
-        hintText: 'Password',
-        hintStyle: focusedStyle,
-        prefixIcon: Icon(
-          Icons.vpn_key,
-          color: Colors.green[400],
-        ),
-      ),
-    );
-  }
-
-  Widget buildForgotPassButton(BuildContext context) {
-    return TextButton(
-      onPressed: () {
-        Provider.of<AppStateManager>(context, listen: false).resetPass(true);
-      },
-      child: const Text(
-        'Forgot password ?',
-        style: TextStyle(
-          fontSize: 16,
-          color: Colors.green,
         ),
       ),
     );
