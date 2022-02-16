@@ -3,30 +3,41 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 
 class AppTab {
-  static const int tab0 = 0;
-  static const int tab1 = 1;
-  static const int tab2 = 2;
+  static const int chat = 0;
+  static const int search = 1;
+  static const int list = 2;
+}
+
+enum AppState {
+  none,
+  initialize,
+  logIn,
+  register,
+  resetPass,
+  home,
 }
 
 class AppStateManager extends ChangeNotifier {
-  bool _initialized = false;
-  bool _loggedIn = false;
-  bool _registered = false;
-  bool _resetPass = false;
+  /// Review: can use enum instead of a bunch of bool
+  /// E.g : [AppState]
 
-  int _selectedTab = AppTab.tab0;
+  AppState _appState = AppState.initialize;
 
-  bool get isInitialized => _initialized;
-  bool get isLoggedIn => _loggedIn;
-  bool get isRegistered => _registered;
-  bool get isResetPass => _resetPass;
+  AppState get currentAppState => _appState;
+
+  int _selectedTab = AppTab.chat;
+
+  /// Review; if the code above use one enum to describe
+  /// current app state then you can reduce number of
+  /// getter here.
+
   int get getSelectedTab => _selectedTab;
 
   void initializeApp() {
     Timer(
       const Duration(seconds: 2),
       () {
-        _initialized = true;
+        _appState = AppState.logIn;
 
         notifyListeners();
       },
@@ -34,32 +45,34 @@ class AppStateManager extends ChangeNotifier {
   }
 
   void login() {
-    _loggedIn = true;
-    _registered = true;
+    _appState = AppState.home;
 
     notifyListeners();
   }
 
-  void goToRegisterScreen() {
-    _loggedIn = true;
-
-    notifyListeners();
-  }
-
-  void returnToLogin() {
-    _loggedIn = false;
+  void goToRegisterScreen(bool value) {
+    if (value){
+      _appState = AppState.register;
+    }else{
+      _appState = AppState.logIn;
+    }
+    
 
     notifyListeners();
   }
 
   void register() {
-    _registered = true;
+    _appState = AppState.home;
 
     notifyListeners();
   }
 
   void resetPass(bool value) {
-    _resetPass = value;
+    if (value) {
+      _appState = AppState.resetPass;
+    } else {
+      _appState = AppState.logIn;
+    }
 
     notifyListeners();
   }
@@ -71,13 +84,11 @@ class AppStateManager extends ChangeNotifier {
   }
 
   void logout() {
-    _initialized = false;
-    _loggedIn = false;
-    _registered = false;
-    _selectedTab = AppTab.tab0;
+    _selectedTab = AppTab.chat;
+    _appState = AppState.initialize;
 
+    // Review: [initializeApp] will call notifyListener 2 seconds later.
+    // What the point of the next [notifyListeners] call ?
     initializeApp();
-
-    notifyListeners();
   }
 }

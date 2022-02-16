@@ -401,7 +401,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     await firebaseFirestore
         .collection("users")
         .doc(currentUser.uid)
-        .set(user.toMap());
+        .set(user.toJson());
     Fluttertoast.showToast(msg: "Account created successfully");
   }
 }

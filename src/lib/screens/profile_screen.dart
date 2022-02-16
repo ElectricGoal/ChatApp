@@ -52,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             onPressed: () {
               Provider.of<ProfileManager>(context, listen: false)
-                  .tapOnProfile(false);
+                  .onProfilePressed(false);
             },
           ),
           actions: [
@@ -149,7 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           logout();
 
           Provider.of<ProfileManager>(context, listen: false)
-              .tapOnProfile(false);
+              .onProfilePressed(false);
 
           Provider.of<AppStateManager>(context, listen: false).logout();
 

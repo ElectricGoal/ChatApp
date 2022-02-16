@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:chat_app/models/user.dart';
 
+UserModel kAnonymousUser = UserModel(
+  uid: 'None',
+  firstName: 'None',
+  lastName: 'None',
+  email: 'None',
+  avatarUrl: 'None',
+);
+
 class ProfileManager extends ChangeNotifier {
-  UserModel user = UserModel(
-    uid: 'none',
-    firstName: 'none',
-    lastName: 'none',
-    email: 'none',
-    avatarUrl: 'none',
-  );
+  UserModel user = kAnonymousUser;
+
   UserModel get getUser => user;
 
   bool _didSelectUser = false;
@@ -19,7 +22,7 @@ class ProfileManager extends ChangeNotifier {
 
   bool get darkMode => _darkMode;
 
-  void tapOnProfile(bool selected) {
+  void onProfilePressed(bool selected) {
     _didSelectUser = selected;
 
     notifyListeners();
@@ -31,23 +34,19 @@ class ProfileManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  void getDataUser(UserModel loggedInUser) {
+  void updateUserData(UserModel loggedInUser) {
     user = loggedInUser;
   }
 
   void updateAvatar(String picUrl) {
-    user.avatarUrl = picUrl;
+    //user.avatarUrl = picUrl;
+
+    user.copyWith(avatarUrl: picUrl);
 
     notifyListeners();
   }
 
   void logout() {
-    user = UserModel(
-      uid: 'none',
-      firstName: 'none',
-      lastName: 'none',
-      email: 'none',
-      avatarUrl: 'none',
-    );
+    user = kAnonymousUser;
   }
 }

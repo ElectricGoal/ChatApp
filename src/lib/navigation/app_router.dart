@@ -30,15 +30,15 @@ class AppRouter extends RouterDelegate
       key: navigatorKey,
       onPopPage: _handlePopPage,
       pages: [
-        if (!appStateManager.isInitialized) InitializeScreen.page(),
-        if (appStateManager.isInitialized &&
-            !appStateManager.isLoggedIn &&
-            !appStateManager.isResetPass)
+        if (appStateManager.currentAppState == AppState.initialize)
+          InitializeScreen.page(),
+        if (appStateManager.currentAppState == AppState.logIn)
           LoginScreen.page(),
-        if (appStateManager.isResetPass) ResetPasswordScreen.page(),
-        if (appStateManager.isLoggedIn && !appStateManager.isRegistered)
+        if (appStateManager.currentAppState == AppState.register)
           RegisterScreen.page(),
-        if (appStateManager.isLoggedIn && appStateManager.isRegistered)
+        if (appStateManager.currentAppState == AppState.resetPass)
+          ResetPasswordScreen.page(),
+        if (appStateManager.currentAppState == AppState.home)
           Home.page(appStateManager.getSelectedTab),
         if (profileManager.didSelectUser)
           ProfileScreen.page(profileManager.getUser),
@@ -58,14 +58,15 @@ class AppRouter extends RouterDelegate
       appStateManager.resetPass(false);
     }
     if (route.settings.name == AppPages.registerPath) {
-      appStateManager.returnToLogin();
+      appStateManager.goToRegisterScreen(false);
     }
     if (route.settings.name == AppPages.profilePath) {
-      profileManager.tapOnProfile(false);
+      profileManager.onProfilePressed(false);
     }
     return true;
   }
 
   @override
+  // ignore: avoid_returning_null_for_void
   Future<void> setNewRoutePath(configuration) async => null;
 }

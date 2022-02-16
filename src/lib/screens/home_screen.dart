@@ -57,11 +57,12 @@ class _HomeState extends State<Home> {
               ),
             );
           }
-          final data = snapshot.data;
-          loggedInUser = UserModel.fromMap(data);
+          //print(snapshot.data);
+          Map<String, dynamic>? data = snapshot.data?.data() as Map<String, dynamic>?;
+          loggedInUser = UserModel.fromJson(data!);
           //print(loggedInUser.firstName);
           Provider.of<ProfileManager>(context, listen: true)
-              .getDataUser(loggedInUser);
+              .updateUserData(loggedInUser);
           return Consumer<AppStateManager>(
             builder: (
               context,
@@ -200,10 +201,9 @@ class _HomeState extends State<Home> {
               ),
         onTap: () {
           Provider.of<ProfileManager>(context, listen: false)
-              .tapOnProfile(true);
+              .onProfilePressed(true);
         },
       ),
     );
   }
-
 }

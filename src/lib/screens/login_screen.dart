@@ -153,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         onPressed: () async {
           Provider.of<AppStateManager>(context, listen: false)
-              .goToRegisterScreen();
+              .goToRegisterScreen(true);
         },
       ),
     );

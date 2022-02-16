@@ -22,28 +22,21 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final _appStateManager = AppStateManager();
-  final _profileManager = ProfileManager();
-  late AppRouter _appRouter;
-
-  @override
-  void initState() {
-    _appRouter = AppRouter(
-      appStateManager: _appStateManager,
-      profileManager: _profileManager,
+  
+  final AppRouter _appRouter = AppRouter(
+      appStateManager: AppStateManager(),
+      profileManager: ProfileManager(),
     );
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (context) => _appStateManager,
+          create: (context) => _appRouter.appStateManager,
         ),
         ChangeNotifierProvider(
-          create: (context) => _profileManager,
+          create: (context) => _appRouter.profileManager,
         ),
       ],
       child: Consumer<ProfileManager>(
