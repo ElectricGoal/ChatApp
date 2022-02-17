@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:chat_app/models/user.dart';
 
 UserModel kAnonymousUser = UserModel(
-  uid: 'None',
-  firstName: 'None',
-  lastName: 'None',
-  email: 'None',
-  avatarUrl: 'None',
+  uid: 'none',
+  firstName: 'none',
+  lastName: 'none',
+  email: 'none',
+  avatarUrl: 'none',
 );
 
 class ProfileManager extends ChangeNotifier {

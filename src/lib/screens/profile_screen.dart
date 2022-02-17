@@ -40,172 +40,181 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ModalProgressHUD(
-      inAsyncCall: showSpinner,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(
-              Icons.close,
-            ),
-            onPressed: () {
-              Provider.of<ProfileManager>(context, listen: false)
-                  .onProfilePressed(false);
-            },
-          ),
-          actions: [
-            Container(
-              padding: const EdgeInsets.only(right: 16),
-              child: TextButton(
+    return Consumer<ProfileManager>(
+      builder: (
+        context,
+        profileManager,
+        child,
+      ) {
+        return ModalProgressHUD(
+          inAsyncCall: showSpinner,
+          child: Scaffold(
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.close,
+                ),
                 onPressed: () {
-                  logout();
-
-                  Provider.of<ProfileManager>(context, listen: false)
-                      .onProfilePressed(false);
-
-                  Provider.of<AppStateManager>(context, listen: false).logout();
-
-                  Provider.of<ProfileManager>(context, listen: false).logout();
+                  profileManager.onProfilePressed(false);
                 },
-                child: const Text(
-                  'Logout',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.green,
-                  ),
-                ),
               ),
-            ),
-          ],
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (widget.user.avatarUrl == 'none')
-                  const Icon(
-                    Icons.account_circle,
-                    //size: 120,
-                    size: 120,
-                    color: Colors.amber,
-                  )
-                else
-                  Container(
-                    height: 120,
-                    width: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.grey,
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        fit: BoxFit.cover,
-                        //image: FileImage(_image!),
-                        image: Image(
-                          image: CachedNetworkImageProvider(
-                            widget.user.avatarUrl!,
-                          ),
-                        ).image,
-                      ),
-                    ),
-                  ),
-                const SizedBox(
-                  height: 5,
-                ),
-                ElevatedButton(
-                  child: const Text(
-                    'Change avatar',
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
-                  style: ButtonStyle(
-                    foregroundColor:
-                        MaterialStateProperty.all<Color>(Colors.white),
-                    backgroundColor:
-                        MaterialStateProperty.all<Color>(Colors.green),
-                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        side: const BorderSide(
-                          color: Colors.green,
-                        ),
-                      ),
-                    ),
-                  ),
-                  onPressed: () async {
-                    XFile? image = await pickImage();
-                    if (image != null) {
-                      setState(() {
-                        _image = File(image.path);
-                      });
-                    } else {
-                      return;
-                    }
-                    setState(() {
-                      showSpinner = true;
-                    });
-                    await uploadImg();
-                    await updateData(picUrl!);
-                    setState(() {});
-                  },
-                ),
-                const SizedBox(
-                  height: 25,
-                ),
-                ListTile(
-                  leading: const Text(
-                    'Full name:',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  trailing: Text(
-                    '${widget.user.firstName} ${widget.user.lastName}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 14,
-                ),
-                ListTile(
-                  leading: const Text(
-                    'Email:',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  trailing: Text(
-                    '${widget.user.email} ',
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                ),
-                const SizedBox(
-                  height: 14,
-                ),
-                ListTile(
-                  leading: const Text(
-                    'Dark mode',
-                    style: TextStyle(
-                      fontSize: 18,
-                    ),
-                  ),
-                  trailing: Switch(
-                    activeColor: Colors.greenAccent,
-                    value: Provider.of<ProfileManager>(context, listen: false)
-                        .darkMode,
-                    onChanged: (value) {
-                      Provider.of<ProfileManager>(context, listen: false)
-                          .darkMode = value;
+              actions: [
+                Container(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: TextButton(
+                    onPressed: () {
+                      logout();
+
+                      Provider.of<AppStateManager>(context, listen: false)
+                          .logout();
+
+                      profileManager.onProfilePressed(false);
+
+                      profileManager.logout();
                     },
+                    child: const Text(
+                      'Logout',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.green,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (profileManager.user.avatarUrl == 'none')
+                      const Icon(
+                        Icons.account_circle,
+                        //size: 120,
+                        size: 120,
+                        color: Colors.amber,
+                      )
+                    else
+                      Container(
+                        height: 120,
+                        width: 120,
+                        decoration: BoxDecoration(
+                          color: Colors.grey,
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            fit: BoxFit.cover,
+                            //image: FileImage(_image!),
+                            image: Image(
+                              image: CachedNetworkImageProvider(
+                                //widget.user.avatarUrl!,
+                                profileManager.user.avatarUrl!,
+                              ),
+                            ).image,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(
+                      height: 5,
+                    ),
+                    ElevatedButton(
+                      child: const Text(
+                        'Change avatar',
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
+                      ),
+                      style: ButtonStyle(
+                        foregroundColor:
+                            MaterialStateProperty.all<Color>(Colors.white),
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Colors.green),
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: const BorderSide(
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                      ),
+                      onPressed: () async {
+                        XFile? image = await pickImage();
+                        if (image != null) {
+                          setState(() {
+                            _image = File(image.path);
+                          });
+                        } else {
+                          return;
+                        }
+                        setState(() {
+                          showSpinner = true;
+                        });
+                        await uploadImg();
+                        await updateData(picUrl!);
+                        setState(() {
+                          showSpinner = false;
+                        });
+                      },
+                    ),
+                    const SizedBox(
+                      height: 25,
+                    ),
+                    ListTile(
+                      leading: const Text(
+                        'Full name:',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                      trailing: Text(
+                        '${profileManager.user.firstName} ${profileManager.user.lastName}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 14,
+                    ),
+                    ListTile(
+                      leading: const Text(
+                        'Email:',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                      trailing: Text(
+                        '${profileManager.user.email} ',
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 14,
+                    ),
+                    ListTile(
+                      leading: const Text(
+                        'Dark mode',
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                      trailing: Switch(
+                        activeColor: Colors.greenAccent,
+                        value: profileManager.darkMode,
+                        onChanged: (value) {
+                          profileManager.darkMode = value;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -250,10 +259,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         .collection("users")
         .doc(widget.user.uid)
         .update({'avatarUrl': picUrl});
-
-    setState(() {
-      showSpinner = false;
-    });
   }
 
   Future<void> logout() async {

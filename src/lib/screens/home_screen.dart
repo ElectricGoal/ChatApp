@@ -58,7 +58,8 @@ class _HomeState extends State<Home> {
             );
           }
           //print(snapshot.data);
-          Map<String, dynamic>? data = snapshot.data?.data() as Map<String, dynamic>?;
+          Map<String, dynamic>? data =
+              snapshot.data?.data() as Map<String, dynamic>?;
           loggedInUser = UserModel.fromJson(data!);
           //print(loggedInUser.firstName);
           Provider.of<ProfileManager>(context, listen: true)
@@ -74,7 +75,36 @@ class _HomeState extends State<Home> {
                   backgroundColor: Colors.green,
                   title: const Text("Chat!"),
                   actions: [
-                    profileButton(),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: InkWell(
+                        child: loggedInUser.avatarUrl == 'none'
+                            ? const Icon(
+                                Icons.account_circle,
+                                size: 40,
+                                color: Colors.white,
+                              )
+                            : Container(
+                                height: 40,
+                                width: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey,
+                                  shape: BoxShape.circle,
+                                  image: DecorationImage(
+                                    fit: BoxFit.cover,
+                                    image: Image(
+                                      image: CachedNetworkImageProvider(
+                                          loggedInUser.avatarUrl!),
+                                    ).image,
+                                  ),
+                                ),
+                              ),
+                        onTap: () {
+                          Provider.of<ProfileManager>(context, listen: false)
+                              .onProfilePressed(true);
+                        },
+                      ),
+                    ),
                   ],
                 ),
                 body: IndexedStack(
@@ -172,38 +202,5 @@ class _HomeState extends State<Home> {
     //     );
     //   },
     // );
-  }
-
-  Widget profileButton() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 16),
-      child: InkWell(
-        child: loggedInUser.avatarUrl == 'none'
-            ? const Icon(
-                Icons.account_circle,
-                size: 40,
-                color: Colors.white,
-              )
-            : Container(
-                height: 40,
-                width: 40,
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                    fit: BoxFit.cover,
-                    image: Image(
-                      image:
-                          CachedNetworkImageProvider(loggedInUser.avatarUrl!),
-                    ).image,
-                  ),
-                ),
-              ),
-        onTap: () {
-          Provider.of<ProfileManager>(context, listen: false)
-              .onProfilePressed(true);
-        },
-      ),
-    );
   }
 }
