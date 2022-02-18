@@ -64,45 +64,69 @@ class UserScreen extends StatelessWidget {
               const SizedBox(
                 height: 20,
               ),
-              buildMessageButton(context),
+              ElevatedButton(
+                child: const Text(
+                  'Message',
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+                style: ButtonStyle(
+                  foregroundColor:
+                      MaterialStateProperty.all<Color>(Colors.white),
+                  backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.green),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      side: const BorderSide(
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
+                ),
+                onPressed: () async {
+                  await postChatRoomToFirestore(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        user: user,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              ElevatedButton(
+                child: const Text(
+                  'Add friends',
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+                style: ButtonStyle(
+                  foregroundColor:
+                      MaterialStateProperty.all<Color>(Colors.white),
+                  backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.green),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      side: const BorderSide(
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
+                ),
+                onPressed: () async {},
+              )
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget buildMessageButton(BuildContext context) {
-    return ElevatedButton(
-      child: const Text(
-        'Message',
-        style: TextStyle(
-          fontSize: 14,
-        ),
-      ),
-      style: ButtonStyle(
-        foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-        backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-            side: const BorderSide(
-              color: Colors.green,
-            ),
-          ),
-        ),
-      ),
-      onPressed: () async {
-        await postChatRoomToFirestore(context);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChatScreen(
-              user: user,
-            ),
-          ),
-        );
-      },
     );
   }
 

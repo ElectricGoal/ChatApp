@@ -48,7 +48,49 @@ class _SearchScreenState extends State<SearchScreen> {
             const SizedBox(
               height: 10,
             ),
-            buildTextField(),
+            TextField(
+              onChanged: (_) {
+                if (_debouncer?.isActive ?? false) {
+                  // Note: _debouncer?.isActive same as _debouncer != null ? _debouncer.isActive : null
+                  _debouncer!.cancel();
+                }
+                _debouncer = Timer(
+                  const Duration(milliseconds: 400),
+                  () {
+                    _search();
+                  },
+                );
+              },
+              controller: _textController,
+              cursorColor: Colors.green,
+              decoration: InputDecoration(
+                suffixIcon: _textController.text.isEmpty
+                    ? Container(width: 0)
+                    : IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.grey,
+                        ),
+                        onPressed: _textController.clear,
+                      ),
+                contentPadding: const EdgeInsets.only(left: 30),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderSide: const BorderSide(color: Colors.black),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(
+                    color: Colors.green,
+                    width: 2.0,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                hintText: 'Search',
+                hintStyle: const TextStyle(color: Colors.grey),
+              ),
+            ),
             const SizedBox(
               height: 10,
             ),
@@ -84,15 +126,13 @@ class _SearchScreenState extends State<SearchScreen> {
     List<UserModel> users = [];
     FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-    await _firestore
-        .collection("users")
-        .get()
-        .then(
+    await _firestore.collection("users").get().then(
       (QuerySnapshot querySnapshot) {
         for (var doc in querySnapshot.docs) {
           String name = doc["firstName"] + ' ' + doc["lastName"];
           if (name.toLowerCase().contains(_textController.text)) {
-            UserModel user = UserModel.fromJson(doc.data() as Map<String, dynamic>);
+            UserModel user =
+                UserModel.fromJson(doc.data() as Map<String, dynamic>);
             users.add(user);
           }
         }
@@ -118,52 +158,6 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     _streamController.add(users);
-  }
-
-  TextField buildTextField() {
-    return TextField(
-      onChanged: (_) {
-        if (_debouncer?.isActive ?? false) {
-          // Note: _debouncer?.isActive same as _debouncer != null ? _debouncer.isActive : null
-          _debouncer!.cancel();
-        }
-        _debouncer = Timer(
-          const Duration(milliseconds: 400),
-          () {
-            _search();
-          },
-        );
-      },
-      controller: _textController,
-      cursorColor: Colors.green,
-      decoration: InputDecoration(
-        suffixIcon: _textController.text.isEmpty
-            ? Container(width: 0)
-            : IconButton(
-                icon: const Icon(
-                  Icons.close,
-                  color: Colors.grey,
-                ),
-                onPressed: _textController.clear,
-              ),
-        contentPadding: const EdgeInsets.only(left: 30),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.black),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(
-            color: Colors.green,
-            width: 2.0,
-          ),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        hintText: 'Search',
-        hintStyle: const TextStyle(color: Colors.grey),
-      ),
-    );
   }
 
   Widget buildUsersList(AsyncSnapshot snapshot, BuildContext context) {
@@ -199,7 +193,9 @@ class _SearchScreenState extends State<SearchScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => UserScreen(user: users[index],),
+                builder: (_) => UserScreen(
+                  user: users[index],
+                ),
               ),
             );
           },
