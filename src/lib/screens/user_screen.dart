@@ -86,12 +86,13 @@ class UserScreen extends StatelessWidget {
                   ),
                 ),
                 onPressed: () async {
-                  await postChatRoomToFirestore(context);
+                  String? roomId = await postChatRoomToFirestore(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => ChatScreen(
                         user: user,
+                        roomId: roomId!,
                       ),
                     ),
                   );
