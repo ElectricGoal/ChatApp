@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/models/models.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key, required this.user, required this.roomId})
@@ -16,12 +17,52 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
 
-  getChat(String roomId) async {
-    return FirebaseFirestore.instance
+  FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+
+  getChat() async {
+    return firebaseFirestore
         .collection('chatRooms')
-        .doc(roomId)
+        .doc(widget.roomId)
         .collection('chats')
         .snapshots();
+  }
+
+  addMessage() {
+    if (_messageController.text.isNotEmpty) {
+      Map<String, dynamic> messageMap = {
+        'message': _messageController.text,
+        'sendBy':
+            Provider.of<ProfileManager>(context, listen: false).getUser.uid,
+        'time': DateTime.now().microsecondsSinceEpoch,
+      };
+
+      firebaseFirestore
+          .collection('chatRooms')
+          .doc(widget.roomId)
+          .collection('chats')
+          .add(messageMap)
+          .catchError(
+        (e) {
+          print(e.toString());
+        },
+      );
+
+      _messageController.clear();
+    }
+  }
+
+  @override
+  void initState() {
+    _messageController.addListener(() {
+      setState(() {});
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -63,13 +104,11 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Stack(
         children: [
           StreamBuilder(
-            stream: FirebaseFirestore.instance
-                .collection('chatRooms')
-                .doc(widget.roomId)
-                .collection('chats')
-                .snapshots(),
-            builder:
-                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+            stream: getChat(),
+            builder: (
+              BuildContext context,
+              AsyncSnapshot<QuerySnapshot> snapshot,
+            ) {
               if (snapshot.hasData) {
                 if (snapshot.data == null) {
                   return Container();
@@ -99,7 +138,10 @@ class _ChatScreenState extends State<ChatScreen> {
       alignment: Alignment.bottomCenter,
       width: MediaQuery.of(context).size.width,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 24,
+          vertical: 24,
+        ),
         color: Colors.black54,
         child: Row(
           children: [
