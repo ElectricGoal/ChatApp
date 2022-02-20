@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/models/models.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,14 +20,6 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
 
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-
-  getChat() async {
-    return firebaseFirestore
-        .collection('chatRooms')
-        .doc(widget.roomId)
-        .collection('chats')
-        .snapshots();
-  }
 
   addMessage() {
     if (_messageController.text.isNotEmpty) {
@@ -49,14 +43,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
       _messageController.clear();
     }
-  }
-
-  @override
-  void initState() {
-    _messageController.addListener(() {
-      setState(() {});
-    });
-    super.initState();
   }
 
   @override
@@ -104,7 +90,12 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Stack(
         children: [
           StreamBuilder(
-            stream: getChat(),
+            stream: firebaseFirestore
+                .collection('chatRooms')
+                .doc(widget.roomId)
+                .collection('chats')
+                .orderBy('time')
+                .snapshots(),
             builder: (
               BuildContext context,
               AsyncSnapshot<QuerySnapshot> snapshot,
@@ -116,10 +107,17 @@ class _ChatScreenState extends State<ChatScreen> {
                 return ListView.builder(
                   itemCount: snapshot.data!.docs.length,
                   itemBuilder: (context, index) {
+                    String? currentUserId =
+                        Provider.of<ProfileManager>(context, listen: false)
+                            .getUser
+                            .uid;
                     Map<String, dynamic> data = snapshot.data!.docs[index]
                         .data() as Map<String, dynamic>;
                     print(data['message']);
-                    return Container();
+                    return MessageTile(
+                      message: data['message'],
+                      isMe: data['sendBy'] == currentUserId,
+                    );
                   },
                 );
               } else {
@@ -159,13 +157,67 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () {},
+              onTap: () {
+                addMessage();
+              },
               child: const Icon(
                 Icons.arrow_upward,
                 size: 20,
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class MessageTile extends StatelessWidget {
+  const MessageTile({Key? key, required this.message, required this.isMe})
+      : super(key: key);
+
+  final String message;
+  final bool isMe;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+          top: 8, bottom: 8, left: isMe ? 0 : 24, right: isMe ? 24 : 0),
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: isMe
+            ? const EdgeInsets.only(left: 30)
+            : const EdgeInsets.only(right: 30),
+        padding: const EdgeInsets.only(
+          top: 17,
+          bottom: 17,
+          left: 20,
+          right: 20,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.green,
+          borderRadius: isMe
+              ? const BorderRadius.only(
+                  topLeft: Radius.circular(23),
+                  topRight: Radius.circular(23),
+                  bottomLeft: Radius.circular(23),
+                )
+              : const BorderRadius.only(
+                  topLeft: Radius.circular(23),
+                  topRight: Radius.circular(23),
+                  bottomLeft: Radius.circular(23),
+                ),
+        ),
+        child: Text(
+          message,
+          textAlign: TextAlign.start,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontFamily: 'OverpassRegular',
+            fontWeight: FontWeight.w300,
+          ),
         ),
       ),
     );
