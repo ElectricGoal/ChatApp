@@ -27,7 +27,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   static List<Widget> pages = const [
-    Tab0Screen(),
+    ChatRoomsScreen(),
     SearchScreen(),
     Tab2Screen(),
   ];

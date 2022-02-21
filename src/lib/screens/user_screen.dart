@@ -145,8 +145,8 @@ class UserScreen extends StatelessWidget {
     await collRef.get().then(
       (QuerySnapshot querySnapshot) {
         for (var doc in querySnapshot.docs) {
-          if (doc['users'].contains(currentUserId) &&
-              doc['users'].contains(user.uid)) {
+          if (doc['users'].contains(firebaseFirestore.doc('users/' + currentUserId!)) &&
+              doc['users'].contains(firebaseFirestore.doc('users/' + user.uid!))) {
             roomId = doc.id;
             existedChatRoom = true;
             return;
@@ -163,7 +163,10 @@ class UserScreen extends StatelessWidget {
     DocumentReference docRef = collRef.doc();
     await docRef
         .set({
-          'users': [user.uid, currentUserId]
+          'users': [
+            firebaseFirestore.doc('users/' + currentUserId!),
+            firebaseFirestore.doc('users/' + user.uid!),
+          ]
         })
         .then((value) => print("ChatRoom created"))
         .catchError((error) => print("Failed to add chatRoom: $error"));

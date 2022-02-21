@@ -27,7 +27,7 @@ class _ChatScreenState extends State<ChatScreen> {
         'message': _messageController.text,
         'sendBy':
             Provider.of<ProfileManager>(context, listen: false).getUser.uid,
-        'time': DateTime.now().microsecondsSinceEpoch,
+        'time': DateTime.now(),
       };
 
       firebaseFirestore
@@ -84,9 +84,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
             const SizedBox(
-              width: 10,
+              width: 15,
             ),
-            Text(widget.user.firstName! + ' ' + widget.user.lastName!),
+            Text(
+              widget.user.firstName! + ' ' + widget.user.lastName!,
+              style: const TextStyle(fontSize: 17),
+            ),
           ],
         ),
       ),
@@ -209,7 +212,7 @@ class MessageTile extends StatelessWidget {
               textAlign: TextAlign.start,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 15,
                 fontFamily: 'OverpassRegular',
                 fontWeight: FontWeight.w300,
               ),
@@ -265,15 +268,15 @@ class MessageTile extends StatelessWidget {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.green,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(23),
                 ),
                 child: Text(
                   message,
                   textAlign: TextAlign.start,
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
+                    color: Colors.black,
+                    fontSize: 15,
                     fontFamily: 'OverpassRegular',
                     fontWeight: FontWeight.w300,
                   ),
