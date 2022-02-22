@@ -7,8 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({Key? key, required this.user, required this.roomId})
-      : super(key: key);
+  const ChatScreen({
+    Key? key,
+    required this.user,
+    required this.roomId,
+  }) : super(key: key);
   final UserModel user;
   final String roomId;
 
@@ -17,9 +20,20 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  bool isEmpty = false;
   final TextEditingController _messageController = TextEditingController();
 
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+  late CollectionReference<Map<String, dynamic>> collRef;
+
+  @override
+  void initState() {
+    collRef = firebaseFirestore
+        .collection('chatRooms')
+        .doc(widget.roomId)
+        .collection('chats');
+    super.initState();
+  }
 
   addMessage() {
     if (_messageController.text.isNotEmpty) {
@@ -30,18 +44,14 @@ class _ChatScreenState extends State<ChatScreen> {
         'time': DateTime.now(),
       };
 
-      firebaseFirestore
-          .collection('chatRooms')
-          .doc(widget.roomId)
-          .collection('chats')
-          .add(messageMap)
-          .catchError(
+      collRef.add(messageMap).catchError(
         (e) {
           print(e.toString());
         },
       );
 
       _messageController.clear();
+      isEmpty = false;
     }
   }
 
@@ -58,6 +68,38 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 177, 211, 228),
       appBar: AppBar(
+        leading: BackButton(
+          onPressed: () async{
+            if (isEmpty) {
+              firebaseFirestore
+                  .collection('chatRooms')
+                  .doc(widget.roomId)
+                  .delete();
+            } else {
+              firebaseFirestore.collection('users').doc(widget.user.uid).update(
+                {
+                  'chatRooms': FieldValue.arrayUnion(
+                    [
+                      firebaseFirestore.doc('chatRooms/${widget.roomId}'),
+                    ],
+                  )
+                },
+              );
+
+              firebaseFirestore.collection('users').doc(currentUserId).update(
+                {
+                  'chatRooms': FieldValue.arrayUnion(
+                    [
+                      firebaseFirestore.doc('chatRooms/${widget.roomId}'),
+                    ],
+                  )
+                },
+              );
+            }
+
+            Navigator.pop(context, false);
+          },
+        ),
         leadingWidth: 40,
         title: Row(
           children: [
@@ -97,12 +139,7 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: StreamBuilder(
-              stream: firebaseFirestore
-                  .collection('chatRooms')
-                  .doc(widget.roomId)
-                  .collection('chats')
-                  .orderBy('time', descending: true)
-                  .snapshots(),
+              stream: collRef.orderBy('time', descending: true).snapshots(),
               builder: (
                 BuildContext context,
                 AsyncSnapshot<QuerySnapshot> snapshot,
@@ -115,6 +152,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     reverse: true,
                     itemCount: snapshot.data!.docs.length,
                     itemBuilder: (context, index) {
+                      isEmpty = false;
                       Map<String, dynamic> data = snapshot.data!.docs[index]
                           .data() as Map<String, dynamic>;
                       //print(data['message']);
@@ -128,6 +166,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                   );
                 } else {
+                  const CircularProgressIndicator();
+                  print('not');
+                  isEmpty = true;
                   return Container();
                 }
               },
@@ -198,25 +239,26 @@ class MessageTile extends StatelessWidget {
         ),
         alignment: Alignment.centerRight,
         child: Container(
-            margin: const EdgeInsets.only(left: 70),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 15,
-              vertical: 10,
+          margin: const EdgeInsets.only(left: 70),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 15,
+            vertical: 10,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.green,
+            borderRadius: BorderRadius.circular(23),
+          ),
+          child: Text(
+            message,
+            textAlign: TextAlign.start,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontFamily: 'OverpassRegular',
+              fontWeight: FontWeight.w300,
             ),
-            decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: BorderRadius.circular(23),
-            ),
-            child: Text(
-              message,
-              textAlign: TextAlign.start,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                fontFamily: 'OverpassRegular',
-                fontWeight: FontWeight.w300,
-              ),
-            )),
+          ),
+        ),
       );
     } else {
       return Row(

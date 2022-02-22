@@ -1,5 +1,5 @@
 export 'app_pages.dart';
-export 'chats_room_screen.dart';
+export 'chat_rooms_screen.dart';
 export 'search_screen.dart';
 export 'tab2_screen.dart';
 export 'profile_screen.dart';
