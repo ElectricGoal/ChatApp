@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chat_app/api/firebase_api.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +33,7 @@ class _HomeState extends State<Home> {
     Tab2Screen(),
   ];
 
-  User? user = FirebaseAuth.instance.currentUser;
+  //User? user = FirebaseAuth.instance.currentUser;
   UserModel loggedInUser = UserModel(
     uid: 'none',
     firstName: 'none',
@@ -45,10 +46,11 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Material(
       child: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection("users")
-            .doc(user!.uid)
-            .snapshots(),
+        // stream: FirebaseFirestore.instance
+        //     .collection("users")
+        //     .doc(user!.uid)
+        //     .snapshots(),
+        stream: FirestoreDatabase().getUserData(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(
@@ -120,7 +122,7 @@ class _HomeState extends State<Home> {
                   },
                   items: const <BottomNavigationBarItem>[
                     BottomNavigationBarItem(
-                      label: 'Tab 0',
+                      label: 'Chat',
                       icon: Icon(Icons.explore),
                     ),
                     BottomNavigationBarItem(
