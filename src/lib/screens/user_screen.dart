@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chat_app/api/firebase_api.dart';
 import 'package:chat_app/models/models.dart';
 import 'package:chat_app/screens/chat_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,6 +18,8 @@ class UserScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String? currentUserId =
+        Provider.of<ProfileManager>(context, listen: false).getUser.uid;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -86,7 +89,9 @@ class UserScreen extends StatelessWidget {
                   ),
                 ),
                 onPressed: () async {
-                  String? roomId = await postChatRoomToFirestore(context);
+                  //String? roomId = await postChatRoomToFirestore(context);
+                  String? roomId = await FirestoreDatabase()
+                      .postChatRoomToFirestore(currentUserId, user.uid);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -145,8 +150,10 @@ class UserScreen extends StatelessWidget {
     await collRef.get().then(
       (QuerySnapshot querySnapshot) {
         for (var doc in querySnapshot.docs) {
-          if (doc['users'].contains(firebaseFirestore.doc('users/' + currentUserId!)) &&
-              doc['users'].contains(firebaseFirestore.doc('users/' + user.uid!))) {
+          if (doc['users']
+                  .contains(firebaseFirestore.doc('users/' + currentUserId!)) &&
+              doc['users']
+                  .contains(firebaseFirestore.doc('users/' + user.uid!))) {
             roomId = doc.id;
             existedChatRoom = true;
             return;

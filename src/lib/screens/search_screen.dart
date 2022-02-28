@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chat_app/api/firebase_api.dart';
 import 'package:chat_app/models/models.dart';
 import 'package:chat_app/screens/user_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -122,25 +122,25 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Future<List<UserModel>> onSearchUserName() async {
-    List<UserModel> users = [];
-    FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Future<List<UserModel>> onSearchUserName() async {
+  //   List<UserModel> users = [];
+  //   FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-    await _firestore.collection("users").get().then(
-      (QuerySnapshot querySnapshot) {
-        for (var doc in querySnapshot.docs) {
-          String name = doc["firstName"] + ' ' + doc["lastName"];
-          if (name.toLowerCase().contains(_textController.text)) {
-            UserModel user =
-                UserModel.fromJson(doc.data() as Map<String, dynamic>);
-            users.add(user);
-          }
-        }
-      },
-    );
+  //   await _firestore.collection("users").get().then(
+  //     (QuerySnapshot querySnapshot) {
+  //       for (var doc in querySnapshot.docs) {
+  //         String name = doc["firstName"] + ' ' + doc["lastName"];
+  //         if (name.toLowerCase().contains(_textController.text)) {
+  //           UserModel user =
+  //               UserModel.fromJson(doc.data() as Map<String, dynamic>);
+  //           users.add(user);
+  //         }
+  //       }
+  //     },
+  //   );
 
-    return users;
-  }
+  //   return users;
+  // }
 
   void _search() async {
     if (_textController.text.isEmpty) {
@@ -150,7 +150,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
     _streamController.add('waiting');
 
-    final List<UserModel> users = await onSearchUserName();
+    final List<UserModel> users = await FirestoreDatabase().searchByUserName(_textController.text);
 
     if (users.isEmpty) {
       _streamController.add('no data');
