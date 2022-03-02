@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/api/firebase_api.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/models/models.dart';
 import 'package:chat_app/screens/screens.dart';
@@ -51,6 +50,7 @@ class _HomeState extends State<Home> {
         //     .doc(user!.uid)
         //     .snapshots(),
         stream: FirestoreDatabase().getUserData(),
+        //stream: Provider.of<FirestoreDatabase>(context, listen: false).getUserData(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(

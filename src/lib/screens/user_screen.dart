@@ -4,7 +4,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app/api/firebase_api.dart';
 import 'package:chat_app/models/models.dart';
 import 'package:chat_app/screens/chat_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -90,14 +89,17 @@ class UserScreen extends StatelessWidget {
                 ),
                 onPressed: () async {
                   //String? roomId = await postChatRoomToFirestore(context);
-                  String? roomId = await FirestoreDatabase()
+                  List? chatRoom = await FirestoreDatabase()
                       .postChatRoomToFirestore(currentUserId, user.uid);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => ChatScreen(
+                        img: user.avatarUrl!,
+                        title: user.firstName! + ' ' + user.lastName!,
+                        existedChatRoom: chatRoom[1],
+                        roomId: chatRoom[0],
                         user: user,
-                        roomId: roomId!,
                       ),
                     ),
                   );
@@ -134,53 +136,5 @@ class UserScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Future<String?> postChatRoomToFirestore(BuildContext context) async {
-    FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-    String? currentUserId =
-        Provider.of<ProfileManager>(context, listen: false).getUser.uid;
-
-    String? roomId;
-
-    bool existedChatRoom = false;
-
-    final collRef = firebaseFirestore.collection('chatRooms');
-
-    await collRef.get().then(
-      (QuerySnapshot querySnapshot) {
-        for (var doc in querySnapshot.docs) {
-          if (doc['users']
-                  .contains(firebaseFirestore.doc('users/' + currentUserId!)) &&
-              doc['users']
-                  .contains(firebaseFirestore.doc('users/' + user.uid!))) {
-            roomId = doc.id;
-            existedChatRoom = true;
-            return;
-          }
-        }
-      },
-    );
-
-    if (existedChatRoom) {
-      print(roomId);
-      return roomId;
-    }
-
-    DocumentReference docRef = collRef.doc();
-    await docRef
-        .set({
-          'users': [
-            firebaseFirestore.doc('users/' + currentUserId!),
-            firebaseFirestore.doc('users/' + user.uid!),
-          ]
-        })
-        .then((value) => print("ChatRoom created"))
-        .catchError((error) => print("Failed to add chatRoom: $error"));
-
-    roomId = docRef.id;
-    print(roomId);
-
-    return roomId;
   }
 }
