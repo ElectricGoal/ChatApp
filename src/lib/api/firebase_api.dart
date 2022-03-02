@@ -15,7 +15,6 @@ class FirebaseApi {
 
       return ref.putFile(file);
     } on FirebaseException catch (e) {
-      // ignore: avoid_print
       print(e);
       return null;
     }
@@ -24,17 +23,28 @@ class FirebaseApi {
 
 class FirestoreDatabase {
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+  late Stream<DocumentSnapshot<Map<String, dynamic>>> snapshot;
 
   void deleteChatRooms(roomId) {
     firebaseFirestore.collection('chatRooms').doc(roomId).delete();
   }
 
-  void updateChatRoomToUser(roomId, userId) {
-    firebaseFirestore.collection('users').doc(userId).update(
+  void updateChatRoomToUser({
+    required String roomId,
+    required UserModel user,
+    required String currentUserId,
+  }) async {
+    Map<String, dynamic> chatRoomInfor = {
+      'id': roomId,
+      'img': user.avatarUrl,
+      'title': user.firstName! + ' ' + user.lastName!,
+    };
+    firebaseFirestore.collection('users').doc(currentUserId).update(
       {
         'chatRooms': FieldValue.arrayUnion(
           [
-            firebaseFirestore.doc('chatRooms/$roomId'),
+            //firebaseFirestore.doc('chatRooms/$roomId'),
+            chatRoomInfor,
           ],
         )
       },
@@ -54,7 +64,7 @@ class FirestoreDatabase {
     );
   }
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> messageStream(roomId) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> getMessages(roomId) {
     return firebaseFirestore
         .collection('chatRooms')
         .doc(roomId)
@@ -84,22 +94,29 @@ class FirestoreDatabase {
 
   Stream<DocumentSnapshot<Map<String, dynamic>>> getUserData() {
     User? user = FirebaseAuth.instance.currentUser;
-
+    //firebaseFirestore.collection("users").doc(user!.uid).get()
+    //snapshot = firebaseFirestore.collection("users").doc(user!.uid).snapshots();
     return firebaseFirestore.collection("users").doc(user!.uid).snapshots();
   }
 
-  Future<String?> postChatRoomToFirestore(String? user1Id, String? user2Id) async {
+  Future<List> postChatRoomToFirestore(
+      String? user1Id, String? user2Id) async {
     String? roomId;
 
     bool existedChatRoom = false;
 
     final collRef = firebaseFirestore.collection('chatRooms');
 
+    // collRef.where('users',
+    //     arrayContains: firebaseFirestore.doc('users/' + user1Id!));
+
     await collRef.get().then(
       (QuerySnapshot querySnapshot) {
         for (var doc in querySnapshot.docs) {
-          if (doc['users'].contains(firebaseFirestore.doc('users/' + user1Id!)) &&
-              doc['users'].contains(firebaseFirestore.doc('users/' + user2Id!))) {
+          if (doc['users']
+                  .contains(firebaseFirestore.doc('users/' + user1Id!)) &&
+              doc['users']
+                  .contains(firebaseFirestore.doc('users/' + user2Id!))) {
             roomId = doc.id;
             existedChatRoom = true;
             return;
@@ -110,7 +127,7 @@ class FirestoreDatabase {
 
     if (existedChatRoom) {
       print(roomId);
-      return roomId;
+      return [roomId, existedChatRoom];
     }
 
     DocumentReference docRef = collRef.doc();
@@ -127,6 +144,6 @@ class FirestoreDatabase {
     roomId = docRef.id;
     print(roomId);
 
-    return roomId;
+    return [roomId, existedChatRoom];
   }
 }

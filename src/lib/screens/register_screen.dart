@@ -258,7 +258,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: MaterialButton(
                     color: color,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0)),
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
                     child: const Text(
                       'Sign up',
                       style: TextStyle(color: Colors.white),

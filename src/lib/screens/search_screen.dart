@@ -122,26 +122,6 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  // Future<List<UserModel>> onSearchUserName() async {
-  //   List<UserModel> users = [];
-  //   FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  //   await _firestore.collection("users").get().then(
-  //     (QuerySnapshot querySnapshot) {
-  //       for (var doc in querySnapshot.docs) {
-  //         String name = doc["firstName"] + ' ' + doc["lastName"];
-  //         if (name.toLowerCase().contains(_textController.text)) {
-  //           UserModel user =
-  //               UserModel.fromJson(doc.data() as Map<String, dynamic>);
-  //           users.add(user);
-  //         }
-  //       }
-  //     },
-  //   );
-
-  //   return users;
-  // }
-
   void _search() async {
     if (_textController.text.isEmpty) {
       _streamController.add(null);

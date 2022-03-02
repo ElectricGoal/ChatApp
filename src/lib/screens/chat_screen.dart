@@ -10,10 +10,16 @@ import 'package:provider/provider.dart';
 class ChatScreen extends StatefulWidget {
   const ChatScreen({
     Key? key,
-    required this.user,
+    required this.img,
+    required this.title,
+    required this.existedChatRoom,
     required this.roomId,
+    this.user,
   }) : super(key: key);
-  final UserModel user;
+  final String img;
+  final String title;
+  final bool existedChatRoom;
+  final UserModel? user;
   final String roomId;
 
   @override
@@ -26,15 +32,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   late CollectionReference<Map<String, dynamic>> collRef;
-
-  @override
-  void initState() {
-    collRef = firebaseFirestore
-        .collection('chatRooms')
-        .doc(widget.roomId)
-        .collection('chats');
-    super.initState();
-  }
 
   addMessage() {
     if (_messageController.text.isNotEmpty) {
@@ -67,45 +64,29 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         leading: BackButton(
           onPressed: () async {
-            if (isEmpty) {
-              // firebaseFirestore
-              //     .collection('chatRooms')
-              //     .doc(widget.roomId)
-              //     .delete();
-              FirestoreDatabase().deleteChatRooms(widget.roomId);
-            } else {
-              // firebaseFirestore.collection('users').doc(widget.user.uid).update(
-              //   {
-              //     'chatRooms': FieldValue.arrayUnion(
-              //       [
-              //         firebaseFirestore.doc('chatRooms/${widget.roomId}'),
-              //       ],
-              //     )
-              //   },
-              // );
-
-              // firebaseFirestore.collection('users').doc(currentUserId).update(
-              //   {
-              //     'chatRooms': FieldValue.arrayUnion(
-              //       [
-              //         firebaseFirestore.doc('chatRooms/${widget.roomId}'),
-              //       ],
-              //     )
-              //   },
-              // );
-              FirestoreDatabase()
-                  .updateChatRoomToUser(widget.roomId, widget.user.uid);
-              FirestoreDatabase()
-                  .updateChatRoomToUser(widget.roomId, currentUserId);
+            if (!widget.existedChatRoom) {
+              if (isEmpty) {
+                FirestoreDatabase().deleteChatRooms(widget.roomId);
+              } else {
+                FirestoreDatabase().updateChatRoomToUser(
+                  roomId: widget.roomId,
+                  user: Provider.of<ProfileManager>(context, listen: false).getUser,
+                  currentUserId: widget.user!.uid!,
+                );
+                FirestoreDatabase().updateChatRoomToUser(
+                  roomId: widget.roomId,
+                  user: widget.user!,
+                  currentUserId: currentUserId!,
+                );
+              }
             }
-
             Navigator.pop(context, false);
           },
         ),
         leadingWidth: 40,
         title: Row(
           children: [
-            widget.user.avatarUrl == 'none'
+            widget.img == 'none'
                 ? const Icon(
                     Icons.account_circle,
                     size: 40,
@@ -121,7 +102,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         fit: BoxFit.cover,
                         image: Image(
                           image: CachedNetworkImageProvider(
-                            widget.user.avatarUrl!,
+                            widget.img,
                           ),
                         ).image,
                       ),
@@ -131,7 +112,7 @@ class _ChatScreenState extends State<ChatScreen> {
               width: 15,
             ),
             Text(
-              widget.user.firstName! + ' ' + widget.user.lastName!,
+              widget.title,
               style: const TextStyle(fontSize: 17),
             ),
           ],
@@ -142,7 +123,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: StreamBuilder(
               //stream: collRef.orderBy('time', descending: true).snapshots(),
-              stream: FirestoreDatabase().messageStream(widget.roomId),
+              stream: FirestoreDatabase().getMessages(widget.roomId),
               builder: (
                 BuildContext context,
                 AsyncSnapshot<QuerySnapshot> snapshot,
@@ -164,7 +145,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       return MessageTile(
                         message: message,
                         isMe: isMe,
-                        user: widget.user,
+                        avatar: widget.img,
                       );
                     },
                   );
@@ -222,12 +203,12 @@ class MessageTile extends StatelessWidget {
     Key? key,
     required this.message,
     required this.isMe,
-    required this.user,
+    required this.avatar,
   }) : super(key: key);
 
   final String message;
   final bool isMe;
-  final UserModel user;
+  final String avatar;
 
   @override
   Widget build(BuildContext context) {
@@ -273,7 +254,7 @@ class MessageTile extends StatelessWidget {
               left: 15,
               right: 0,
             ),
-            child: user.avatarUrl == 'none'
+            child: avatar == 'none'
                 ? const Icon(
                     Icons.account_circle,
                     size: 40,
@@ -289,7 +270,7 @@ class MessageTile extends StatelessWidget {
                         fit: BoxFit.cover,
                         image: Image(
                           image: CachedNetworkImageProvider(
-                            user.avatarUrl!,
+                            avatar,
                           ),
                         ).image,
                       ),
@@ -333,5 +314,3 @@ class MessageTile extends StatelessWidget {
     }
   }
 }
-
-void updateChatRoomsUser() async {}
