@@ -8,73 +8,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class UserScreen extends StatelessWidget {
-  const UserScreen({
+  UserScreen({
     Key? key,
     required this.user,
   }) : super(key: key);
   final UserModel user;
 
-  Future<bool> check(String uid) async {
-    bool check = false;
-    await FirebaseFirestore.instance.collection('users').doc(uid).get().then(
-      (value) {
-        if (value['friends'].contains(user.uid)) {
-          //print('true');
-          check = true;
-          return;
-        }
-      },
-    );
-
-    return check;
-  }
-
-  Future<bool> isFriend(String uid) {
-    var snapshot = FirebaseFirestore.instance
-        .collection('users')
-        .doc('$uid/friends')
-        .snapshots();
-    return snapshot.contains(user.uid);
-  }
-
-  Future<bool> isSending(String uid) {
-    var snapshot = FirebaseFirestore.instance
-        .collection('users')
-        .doc('$uid/reqSend')
-        .snapshots();
-    return snapshot.contains(user.uid);
-  }
-
-  Future<bool> isReceived(String uid) {
-    var snapshot = FirebaseFirestore.instance
-        .collection('users')
-        .doc('$uid/reqReceived')
-        .snapshots();
-    return snapshot.contains(user.uid);
-  }
-
-  Future<int> whichType(String uid) async {
-    if (await isFriend(uid)) {
-      print('is friend');
-      return 1;
-    }
-    if (await isSending(uid)) {
-      print('is friend request send');
-      return 2;
-    }
-    if (await isReceived(uid)) {
-      print('is friend requested by');
-      return 3;
-    }
-    return 4;
-  }
-
   @override
   Widget build(BuildContext context) {
     dynamic currentUserId =
         Provider.of<ProfileManager>(context, listen: false).getUser.uid;
-    //Future<int> typeF = whichType(currentUserId);
-    //print(isFriend(currentUserId));
+    FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -159,11 +104,11 @@ class UserScreen extends StatelessWidget {
               const SizedBox(
                 height: 20,
               ),
-              // FriendStatus(
-              //     firebaseFirestore: firebaseFirestore,
-              //     currentUserId: currentUserId,
-              //     user: user,
-              //     typeFriend: typeF,),
+              FollowStatus(
+                firebaseFirestore: firebaseFirestore,
+                currentUserId: currentUserId,
+                user: user,
+              ),
             ],
           ),
         ),
@@ -220,82 +165,108 @@ class UserScreen extends StatelessWidget {
   }
 }
 
-class FriendStatus extends StatelessWidget {
-  FriendStatus({
+class FollowStatus extends StatefulWidget {
+  const FollowStatus({
     Key? key,
     required this.firebaseFirestore,
     required this.currentUserId,
     required this.user,
-    required this.typeFriend,
   }) : super(key: key);
-  int _type = 0;
   final FirebaseFirestore firebaseFirestore;
   final String currentUserId;
   final UserModel user;
-  final Future<int> typeFriend;
-  Future<void> convertF(Future<int> type) async {
-    _type = await type;
+
+  @override
+  State<FollowStatus> createState() => _FollowStatusState();
+}
+
+class _FollowStatusState extends State<FollowStatus> {
+  bool _check = false;
+  Future<void> check(String uid) async {
+    await FirebaseFirestore.instance.collection('users').doc(uid).get().then(
+      (value) {
+        if (value['following'].contains(widget.user.uid)) {
+          _check = true;
+          print("treuueeeeeeee\n");
+          return;
+        }
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    convertF(typeFriend);
-    String status = "";
-    print(_type);
-    if (_type == 1 || _type == 2 || _type == 4) {
-      print('hmmm\n');
-      if (_type == 1) {
-        status = "Friend";
-      } else if (_type == 2) {
-        status = "Friend Request Send";
-      } else if (_type == 4) {
-        status = "Friend Requested By";
-      }
-      return ElevatedButton(
-        child: Text(
-          status,
-          style: const TextStyle(
-            fontSize: 14,
-          ),
-        ),
-        style: ButtonStyle(
-          foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-          backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-              side: const BorderSide(
-                color: Colors.green,
-              ),
-            ),
-          ),
-        ),
-        onPressed: () async {
-          firebaseFirestore.collection('users').doc(currentUserId).update({
-            'reqSend': FieldValue.arrayUnion(
-              [
-                firebaseFirestore.doc('users/${user.uid}'),
-              ],
-            )
-          });
-          firebaseFirestore.collection('users').doc(user.uid).update({
-            'reqReceived': FieldValue.arrayUnion(
-              [
-                firebaseFirestore.doc('users/$currentUserId'),
-              ],
-            )
-          });
-        },
-      );
-    }
-    return Container(
-      color: Colors.cyan,
-      child: const Text(
-        'oh noooooo',
-        style: TextStyle(
+    check(widget.currentUserId);
+    return ElevatedButton(
+      child: Text(
+        _check ? 'Unfollow' : 'Follow',
+        style: const TextStyle(
           fontSize: 14,
         ),
       ),
+      style: ButtonStyle(
+        foregroundColor: MaterialStateProperty.all<Color>(
+            !_check ? Colors.white : Colors.green),
+        backgroundColor: MaterialStateProperty.all<Color>(
+            !_check ? Colors.green : Colors.white),
+        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(
+              color: !_check ? Colors.green : Colors.white,
+            ),
+          ),
+        ),
+      ),
+      onPressed: () async {
+        setState(() {
+          if (!_check) {
+            _check = true;
+            widget.firebaseFirestore
+                .collection('users')
+                .doc(widget.currentUserId)
+                .update({
+              'following': FieldValue.arrayUnion(
+                [
+                  widget.firebaseFirestore.doc('users/${widget.user.uid}'),
+                ],
+              )
+            });
+            widget.firebaseFirestore
+                .collection('users')
+                .doc(widget.user.uid)
+                .update({
+              'follower': FieldValue.arrayUnion(
+                [
+                  widget.firebaseFirestore.doc('users/${widget.currentUserId}'),
+                ],
+              )
+            });
+          } else {
+            _check = false;
+            widget.firebaseFirestore
+                .collection('users')
+                .doc(widget.currentUserId)
+                .update({
+              'following': FieldValue.arrayRemove(
+                [
+                  widget.firebaseFirestore.doc('users/${widget.user.uid}'),
+                ],
+              )
+            });
+            widget.firebaseFirestore
+                .collection('users')
+                .doc(widget.user.uid)
+                .update({
+              'follower': FieldValue.arrayRemove(
+                [
+                  widget.firebaseFirestore.doc('users/${widget.currentUserId}'),
+                ],
+              )
+            });
+          }
+        });
+      },
     );
   }
 }
