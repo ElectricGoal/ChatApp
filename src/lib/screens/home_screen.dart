@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chat_app/screens/chat_rooms_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +27,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  static List<Widget> pages = const [
+  static List<Widget> pages = const[
     ChatRoomsScreen(),
     SearchScreen(),
     Tab2Screen(),

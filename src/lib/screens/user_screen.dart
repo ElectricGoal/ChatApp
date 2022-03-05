@@ -13,6 +13,22 @@ class UserScreen extends StatelessWidget {
     required this.user,
   }) : super(key: key);
   final UserModel user;
+
+  Future<bool> check(String uid) async {
+    bool check = false;
+    await FirebaseFirestore.instance.collection('users').doc(uid).get().then(
+      (value) {
+        if (value['friends'].contains(user.uid)) {
+          //print('true');
+          check = true;
+          return;
+        }
+      },
+    );
+
+    return check;
+  }
+
   Future<bool> isFriend(String uid) {
     var snapshot = FirebaseFirestore.instance
         .collection('users')
@@ -55,10 +71,10 @@ class UserScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
     dynamic currentUserId =
         Provider.of<ProfileManager>(context, listen: false).getUser.uid;
-    Future<int> typeF = whichType(currentUserId);
+    //Future<int> typeF = whichType(currentUserId);
+    //print(isFriend(currentUserId));
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -143,11 +159,11 @@ class UserScreen extends StatelessWidget {
               const SizedBox(
                 height: 20,
               ),
-              FriendStatus(
-                  firebaseFirestore: firebaseFirestore,
-                  currentUserId: currentUserId,
-                  user: user,
-                  typeFriend: typeF),
+              // FriendStatus(
+              //     firebaseFirestore: firebaseFirestore,
+              //     currentUserId: currentUserId,
+              //     user: user,
+              //     typeFriend: typeF,),
             ],
           ),
         ),
