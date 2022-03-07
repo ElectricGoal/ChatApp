@@ -95,12 +95,13 @@ class FirestoreDatabase {
   Stream<DocumentSnapshot<Map<String, dynamic>>> getUserData() {
     User? user = FirebaseAuth.instance.currentUser;
     //firebaseFirestore.collection("users").doc(user!.uid).get()
-    //snapshot = firebaseFirestore.collection("users").doc(user!.uid).snapshots();
     return firebaseFirestore.collection("users").doc(user!.uid).snapshots();
   }
 
   Future<List> postChatRoomToFirestore(
-      String? user1Id, String? user2Id) async {
+    String? user1Id,
+    String? user2Id,
+  ) async {
     String? roomId;
 
     bool existedChatRoom = false;

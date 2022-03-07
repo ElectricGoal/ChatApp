@@ -14,9 +14,7 @@ class ChatRoomsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-    String? currentUserId =
-        Provider.of<ProfileManager>(context, listen: false).getUser.uid;
+    String? currentUserId = context.read<ProfileManager>().getUser.uid;
     return StreamBuilder(
       stream: FirestoreDatabase().getUserData(),
       builder: (
@@ -42,11 +40,11 @@ class ChatRoomsScreen extends StatelessWidget {
                 ),
                 itemCount: chatRooms.length,
                 itemBuilder: (context, index) {
-                  Map<String, dynamic> data = chatRooms[index];
+                  Map<String, dynamic> chatRoom = chatRooms[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     child: ListTile(
-                      leading: data['img'] == 'none'
+                      leading: chatRoom['img'] == 'none'
                           ? const Icon(
                               Icons.account_circle,
                               size: 60,
@@ -62,22 +60,22 @@ class ChatRoomsScreen extends StatelessWidget {
                                   fit: BoxFit.cover,
                                   image: Image(
                                     image: CachedNetworkImageProvider(
-                                      data['img'],
+                                      chatRoom['img'],
                                     ),
                                   ).image,
                                 ),
                               ),
                             ),
-                      title: Text(data['title']),
+                      title: Text(chatRoom['title']),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => ChatScreen(
-                              img: data['img'],
-                              title: data['title'],
+                              img: chatRoom['img'],
+                              title: chatRoom['title'],
                               existedChatRoom: true,
-                              roomId: data['id'],
+                              roomId: chatRoom['id'],
                             ),
                           ),
                         );
