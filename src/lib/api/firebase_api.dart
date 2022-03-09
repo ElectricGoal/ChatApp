@@ -31,37 +31,88 @@ class FirestoreDatabase {
 
   void updateChatRoomToUser({
     required String roomId,
-    required UserModel user,
+    required String user2Id,
     required String currentUserId,
+    required String title,
+    required String img,
+
   }) async {
     Map<String, dynamic> chatRoomInfor = {
       'id': roomId,
-      'img': user.avatarUrl,
-      'title': user.firstName! + ' ' + user.lastName!,
+      'img': img,
+      'title': title,
+      'user2Id': user2Id,
+      'lastMessage': 'none',
+      'time': DateTime.now(),
+      'sendBy': 'none',
     };
-    firebaseFirestore.collection('users').doc(currentUserId).update(
-      {
-        'chatRooms': FieldValue.arrayUnion(
-          [
-            //firebaseFirestore.doc('chatRooms/$roomId'),
-            chatRoomInfor,
-          ],
-        )
-      },
-    );
-  }
-
-  void addMessage(messageMap, roomId) {
+    // firebaseFirestore.collection('users').doc(currentUserId).update(
+    //   {
+    //     'chatRooms': FieldValue.arrayUnion(
+    //       [
+    //         chatRoomInfor,
+    //       ],
+    //     )
+    //   },
+    // );
     firebaseFirestore
+        .collection('users')
+        .doc(currentUserId)
         .collection('chatRooms')
-        .doc(roomId)
-        .collection('chats')
-        .add(messageMap)
+        .add(chatRoomInfor)
         .catchError(
       (e) {
         print(e.toString());
       },
     );
+  }
+
+  void updateLastMessageToChatRoom({
+    required String currentUserId,
+    required String roomId,
+    required Map<String, dynamic> lastMessageMap,
+  }) async {
+    String id = '';
+    CollectionReference colRef = firebaseFirestore
+        .collection('users')
+        .doc(currentUserId)
+        .collection('chatRooms');
+
+    await colRef.get().then(
+      (QuerySnapshot querySnapshot) {
+        for (var doc in querySnapshot.docs) {
+          if (doc['id'].contains(roomId)) {
+            id = doc.id;
+            return;
+          }
+        }
+      },
+    );
+
+    Map<String, dynamic> formattedLastMessageMap = {
+      'lastMessage': lastMessageMap['message'],
+      'sendBy': lastMessageMap['sendBy'] == currentUserId ? 'you' : 'other',
+      'time': lastMessageMap['time'],
+    };
+
+    colRef.doc(id).update(formattedLastMessageMap).catchError((error) {
+      print(error);
+    });
+  }
+
+  void addMessage(messageMap, roomId) {
+    DocumentReference docRef =
+        firebaseFirestore.collection('chatRooms').doc(roomId);
+
+    docRef.collection('chats').add(messageMap).catchError(
+      (e) {
+        print(e.toString());
+      },
+    );
+
+    // docRef.update(
+    //   {'lastMessage': messageMap},
+    // ).catchError((error) => print(error));
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> getMessages(roomId) {
@@ -92,15 +143,32 @@ class FirestoreDatabase {
     return users;
   }
 
+  Future<void> updateData(String picUrl, String currentUserId) async {
+    await FirebaseFirestore.instance
+        .collection("users")
+        .doc(currentUserId)
+        .update({'avatarUrl': picUrl});
+  }
+
   Stream<DocumentSnapshot<Map<String, dynamic>>> getUserData() {
     User? user = FirebaseAuth.instance.currentUser;
     //firebaseFirestore.collection("users").doc(user!.uid).get()
-    //snapshot = firebaseFirestore.collection("users").doc(user!.uid).snapshots();
     return firebaseFirestore.collection("users").doc(user!.uid).snapshots();
   }
 
+  Stream<QuerySnapshot<Map<String, dynamic>>> getChatRooms() {
+    User? user = FirebaseAuth.instance.currentUser;
+    return firebaseFirestore
+        .collection("users")
+        .doc(user!.uid)
+        .collection('chatRooms')
+        .snapshots();
+  }
+
   Future<List> postChatRoomToFirestore(
-      String? user1Id, String? user2Id) async {
+    String? user1Id,
+    String? user2Id,
+  ) async {
     String? roomId;
 
     bool existedChatRoom = false;

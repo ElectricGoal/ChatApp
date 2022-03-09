@@ -93,11 +93,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     if (profileManager.user.avatarUrl == 'none')
-                      const Icon(
+                      Icon(
                         Icons.account_circle,
                         //size: 120,
                         size: 120,
-                        color: Colors.amber,
+                        color: Colors.green[600],
                       )
                     else
                       Container(
@@ -156,7 +156,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           showSpinner = true;
                         });
                         await uploadImg();
-                        await updateData(picUrl!);
+                        await FirestoreDatabase().updateData(picUrl!, widget.user.uid!);
+                        //await updateData(picUrl!);
                         setState(() {
                           showSpinner = false;
                         });
@@ -254,12 +255,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Provider.of<ProfileManager>(context, listen: false).updateAvatar(picUrl!);
   }
 
-  Future<void> updateData(String picUrl) async {
-    await FirebaseFirestore.instance
-        .collection("users")
-        .doc(widget.user.uid)
-        .update({'avatarUrl': picUrl});
-  }
+  // Future<void> updateData(String picUrl) async {
+  //   await FirebaseFirestore.instance
+  //       .collection("users")
+  //       .doc(widget.user.uid)
+  //       .update({'avatarUrl': picUrl});
+  // }
 
   Future<void> logout() async {
     await FirebaseAuth.instance.signOut();

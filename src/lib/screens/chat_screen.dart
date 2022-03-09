@@ -5,6 +5,7 @@ import 'package:chat_app/api/firebase_api.dart';
 import 'package:chat_app/models/models.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -14,12 +15,12 @@ class ChatScreen extends StatefulWidget {
     required this.title,
     required this.existedChatRoom,
     required this.roomId,
-    this.user,
+    required this.user2Id,
   }) : super(key: key);
   final String img;
   final String title;
   final bool existedChatRoom;
-  final UserModel? user;
+  final String user2Id;
   final String roomId;
 
   @override
@@ -27,25 +28,24 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  bool isEmpty = false;
+  //bool isEmpty = true;
+  bool isTyped = false;
   final TextEditingController _messageController = TextEditingController();
 
-  FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-  late CollectionReference<Map<String, dynamic>> collRef;
+  Map<String, dynamic> lastMessageMap = {};
 
   addMessage() {
     if (_messageController.text.isNotEmpty) {
       Map<String, dynamic> messageMap = {
         'message': _messageController.text,
-        'sendBy':
-            Provider.of<ProfileManager>(context, listen: false).getUser.uid,
+        'sendBy': context.read<ProfileManager>().getUser.uid,
         'time': DateTime.now(),
       };
-
+      lastMessageMap = messageMap;
       FirestoreDatabase().addMessage(messageMap, widget.roomId);
 
       _messageController.clear();
-      isEmpty = false;
+      isTyped = true;
     }
   }
 
@@ -57,28 +57,46 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    String? currentUserId =
-        Provider.of<ProfileManager>(context, listen: false).getUser.uid;
+    String? currentUserId = context.read<ProfileManager>().getUser.uid;
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 177, 211, 228),
       appBar: AppBar(
         leading: BackButton(
           onPressed: () async {
             if (!widget.existedChatRoom) {
-              if (isEmpty) {
+              if (!isTyped) {
                 FirestoreDatabase().deleteChatRooms(widget.roomId);
               } else {
                 FirestoreDatabase().updateChatRoomToUser(
                   roomId: widget.roomId,
-                  user: Provider.of<ProfileManager>(context, listen: false).getUser,
-                  currentUserId: widget.user!.uid!,
+                  currentUserId: widget.user2Id,
+                  user2Id: currentUserId!,
+                  title: context.read<ProfileManager>().getUser.firstName! +
+                      ' ' +
+                      context.read<ProfileManager>().getUser.lastName!,
+                  img: context.read<ProfileManager>().getUser.avatarUrl!,
                 );
                 FirestoreDatabase().updateChatRoomToUser(
                   roomId: widget.roomId,
-                  user: widget.user!,
-                  currentUserId: currentUserId!,
+                  currentUserId: currentUserId,
+                  user2Id: widget.user2Id,
+                  title: widget.title,
+                  img: widget.img,
                 );
               }
+            }
+            if (isTyped) {
+              FirestoreDatabase().updateLastMessageToChatRoom(
+                currentUserId: currentUserId!,
+                roomId: widget.roomId,
+                lastMessageMap: lastMessageMap,
+              );
+
+              FirestoreDatabase().updateLastMessageToChatRoom(
+                currentUserId: widget.user2Id,
+                roomId: widget.roomId,
+                lastMessageMap: lastMessageMap,
+              );
             }
             Navigator.pop(context, false);
           },
@@ -87,10 +105,10 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Row(
           children: [
             widget.img == 'none'
-                ? const Icon(
+                ? Icon(
                     Icons.account_circle,
                     size: 40,
-                    color: Colors.white,
+                    color: Colors.green[600],
                   )
                 : Container(
                     height: 40,
@@ -122,7 +140,6 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: StreamBuilder(
-              //stream: collRef.orderBy('time', descending: true).snapshots(),
               stream: FirestoreDatabase().getMessages(widget.roomId),
               builder: (
                 BuildContext context,
@@ -136,47 +153,88 @@ class _ChatScreenState extends State<ChatScreen> {
                     reverse: true,
                     itemCount: snapshot.data!.docs.length,
                     itemBuilder: (context, index) {
-                      isEmpty = false;
-                      Map<String, dynamic> data = snapshot.data!.docs[index]
+                      Map<String, dynamic> message = snapshot.data!.docs[index]
                           .data() as Map<String, dynamic>;
                       //print(data['message']);
-                      bool isMe = data['sendBy'] == currentUserId;
-                      String message = data['message'];
+                      bool isMe = message['sendBy'] == currentUserId;
+                      DateTime dt = (message['time'] as Timestamp).toDate();
+                      //final DateFormat timeFormatter = DateFormat('jm');
+                      //final DateFormat dayFormatter = DateFormat('yyyy-MM-dd');
+                      final String time = DateFormat('jm').format(dt);
+                      final String dayMessage =
+                          DateFormat('yyyy-MM-dd').format(dt);
+                      // print(dayMessage);
+                      // if (day != dayMessage) {
+                      //   //print(day);
+                      //   var messageWidget = Column(
+                      //     children: [
+                      //       Text(day),
+                      //       MessageTile(
+                      //         message: message['message'],
+                      //         isMe: isMe,
+                      //         avatar: widget.img,
+                      //         time: time,
+                      //       ),
+                      //     ],
+                      //   );
+                      //   day = dayMessage;
+                      //   return messageWidget;
+                      // }
                       return MessageTile(
-                        message: message,
+                        message: message['message'],
                         isMe: isMe,
                         avatar: widget.img,
+                        time: time,
                       );
                     },
                   );
                 } else {
                   const CircularProgressIndicator();
-                  isEmpty = true;
                   return Container();
                 }
               },
             ),
           ),
           Container(
-            height: 60,
-            width: MediaQuery.of(context).size.width,
             padding: const EdgeInsets.symmetric(
-              horizontal: 24,
+              horizontal: 20,
               vertical: 10,
             ),
-            color: Colors.white,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(2),
+            ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: "Message...",
-                      hintStyle: TextStyle(
-                        color: Colors.black,
-                        fontSize: 15,
+                Container(
+                  constraints: BoxConstraints(
+                    minWidth: MediaQuery.of(context).size.width - 80,
+                    maxWidth: MediaQuery.of(context).size.width - 80,
+                    minHeight: 25.0,
+                    maxHeight: 100.0,
+                  ),
+                  child: Scrollbar(
+                    child: TextField(
+                      keyboardType: TextInputType.multiline,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (value) {},
+                      maxLines: null,
+                      // focusNode: focusNode,
+                      controller: _messageController,
+                      style: const TextStyle(color: Colors.black),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 13,
+                          vertical: 13,
+                        ),
+                        hintText: "Message",
+                        hintStyle: TextStyle(
+                          color: Colors.black,
+                          fontSize: 14,
+                        ),
                       ),
-                      border: InputBorder.none,
                     ),
                   ),
                 ),
@@ -184,9 +242,17 @@ class _ChatScreenState extends State<ChatScreen> {
                   onTap: () {
                     addMessage();
                   },
-                  child: const Icon(
-                    Icons.arrow_upward,
-                    size: 20,
+                  child: Container(
+                    //color: Colors.amber,
+                    margin: const EdgeInsets.only(
+                      //right: 20,
+                      left: 19,
+                      bottom: 12,
+                    ),
+                    child: const Icon(
+                      Icons.arrow_upward,
+                      size: 21,
+                    ),
                   ),
                 ),
               ],
@@ -204,11 +270,13 @@ class MessageTile extends StatelessWidget {
     required this.message,
     required this.isMe,
     required this.avatar,
+    required this.time,
   }) : super(key: key);
 
   final String message;
   final bool isMe;
   final String avatar;
+  final String time;
 
   @override
   Widget build(BuildContext context) {
@@ -229,17 +297,34 @@ class MessageTile extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             color: Colors.green,
-            borderRadius: BorderRadius.circular(23),
+            borderRadius: BorderRadius.circular(15),
           ),
-          child: Text(
-            message,
-            textAlign: TextAlign.start,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-              fontFamily: 'OverpassRegular',
-              fontWeight: FontWeight.w300,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                message,
+                textAlign: TextAlign.start,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontFamily: 'OverpassRegular',
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Text(
+                time,
+                textAlign: TextAlign.start,
+                style: const TextStyle(
+                  color: Colors.white30,
+                  fontSize: 9,
+                  fontFamily: 'OverpassRegular',
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -255,10 +340,10 @@ class MessageTile extends StatelessWidget {
               right: 0,
             ),
             child: avatar == 'none'
-                ? const Icon(
+                ? Icon(
                     Icons.account_circle,
                     size: 40,
-                    color: Colors.white,
+                    color: Colors.green[600],
                   )
                 : Container(
                     height: 40,
@@ -294,17 +379,34 @@ class MessageTile extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(23),
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                child: Text(
-                  message,
-                  textAlign: TextAlign.start,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 15,
-                    fontFamily: 'OverpassRegular',
-                    fontWeight: FontWeight.w300,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message,
+                      textAlign: TextAlign.start,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 15,
+                        fontFamily: 'OverpassRegular',
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      time,
+                      textAlign: TextAlign.start,
+                      style: const TextStyle(
+                        color: Colors.black26,
+                        fontSize: 9,
+                        fontFamily: 'OverpassRegular',
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
