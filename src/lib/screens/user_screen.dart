@@ -32,11 +32,10 @@ class UserScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (user.avatarUrl == 'none')
-                const Icon(
+                Icon(
                   Icons.account_circle,
-                  //size: 120,
                   size: 120,
-                  color: Colors.amber,
+                  color: Colors.green[600],
                 )
               else
                 Container(
@@ -99,7 +98,7 @@ class UserScreen extends StatelessWidget {
                         title: user.firstName! + ' ' + user.lastName!,
                         existedChatRoom: chatRoom[1],
                         roomId: chatRoom[0],
-                        user: user,
+                        user2Id: user.uid!,
                       ),
                     ),
                   );

@@ -15,12 +15,12 @@ class ChatScreen extends StatefulWidget {
     required this.title,
     required this.existedChatRoom,
     required this.roomId,
-    this.user,
+    required this.user2Id,
   }) : super(key: key);
   final String img;
   final String title;
   final bool existedChatRoom;
-  final UserModel? user;
+  final String user2Id;
   final String roomId;
 
   @override
@@ -28,10 +28,11 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  bool isEmpty = false;
+  //bool isEmpty = true;
+  bool isTyped = false;
   final TextEditingController _messageController = TextEditingController();
 
-  String day = ' ';
+  Map<String, dynamic> lastMessageMap = {};
 
   addMessage() {
     if (_messageController.text.isNotEmpty) {
@@ -40,11 +41,11 @@ class _ChatScreenState extends State<ChatScreen> {
         'sendBy': context.read<ProfileManager>().getUser.uid,
         'time': DateTime.now(),
       };
-
+      lastMessageMap = messageMap;
       FirestoreDatabase().addMessage(messageMap, widget.roomId);
 
       _messageController.clear();
-      isEmpty = false;
+      isTyped = true;
     }
   }
 
@@ -63,20 +64,39 @@ class _ChatScreenState extends State<ChatScreen> {
         leading: BackButton(
           onPressed: () async {
             if (!widget.existedChatRoom) {
-              if (isEmpty) {
+              if (!isTyped) {
                 FirestoreDatabase().deleteChatRooms(widget.roomId);
               } else {
                 FirestoreDatabase().updateChatRoomToUser(
                   roomId: widget.roomId,
-                  user: context.read<ProfileManager>().getUser,
-                  currentUserId: widget.user!.uid!,
+                  currentUserId: widget.user2Id,
+                  user2Id: currentUserId!,
+                  title: context.read<ProfileManager>().getUser.firstName! +
+                      ' ' +
+                      context.read<ProfileManager>().getUser.lastName!,
+                  img: context.read<ProfileManager>().getUser.avatarUrl!,
                 );
                 FirestoreDatabase().updateChatRoomToUser(
                   roomId: widget.roomId,
-                  user: widget.user!,
-                  currentUserId: currentUserId!,
+                  currentUserId: currentUserId,
+                  user2Id: widget.user2Id,
+                  title: widget.title,
+                  img: widget.img,
                 );
               }
+            }
+            if (isTyped) {
+              FirestoreDatabase().updateLastMessageToChatRoom(
+                currentUserId: currentUserId!,
+                roomId: widget.roomId,
+                lastMessageMap: lastMessageMap,
+              );
+
+              FirestoreDatabase().updateLastMessageToChatRoom(
+                currentUserId: widget.user2Id,
+                roomId: widget.roomId,
+                lastMessageMap: lastMessageMap,
+              );
             }
             Navigator.pop(context, false);
           },
@@ -85,10 +105,10 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Row(
           children: [
             widget.img == 'none'
-                ? const Icon(
+                ? Icon(
                     Icons.account_circle,
                     size: 40,
-                    color: Colors.white,
+                    color: Colors.green[600],
                   )
                 : Container(
                     height: 40,
@@ -133,7 +153,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     reverse: true,
                     itemCount: snapshot.data!.docs.length,
                     itemBuilder: (context, index) {
-                      isEmpty = false;
                       Map<String, dynamic> message = snapshot.data!.docs[index]
                           .data() as Map<String, dynamic>;
                       //print(data['message']);
@@ -144,7 +163,23 @@ class _ChatScreenState extends State<ChatScreen> {
                       final String time = DateFormat('jm').format(dt);
                       final String dayMessage =
                           DateFormat('yyyy-MM-dd').format(dt);
-                      //print(dayMessage);
+                      // print(dayMessage);
+                      // if (day != dayMessage) {
+                      //   //print(day);
+                      //   var messageWidget = Column(
+                      //     children: [
+                      //       Text(day),
+                      //       MessageTile(
+                      //         message: message['message'],
+                      //         isMe: isMe,
+                      //         avatar: widget.img,
+                      //         time: time,
+                      //       ),
+                      //     ],
+                      //   );
+                      //   day = dayMessage;
+                      //   return messageWidget;
+                      // }
                       return MessageTile(
                         message: message['message'],
                         isMe: isMe,
@@ -155,7 +190,6 @@ class _ChatScreenState extends State<ChatScreen> {
                   );
                 } else {
                   const CircularProgressIndicator();
-                  isEmpty = true;
                   return Container();
                 }
               },
@@ -306,10 +340,10 @@ class MessageTile extends StatelessWidget {
               right: 0,
             ),
             child: avatar == 'none'
-                ? const Icon(
+                ? Icon(
                     Icons.account_circle,
                     size: 40,
-                    color: Colors.white,
+                    color: Colors.green[600],
                   )
                 : Container(
                     height: 40,

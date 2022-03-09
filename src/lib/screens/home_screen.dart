@@ -87,14 +87,14 @@ class _HomeState extends State<Home> {
                 ),
               ),
               actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
+                Container(
+                  margin: const EdgeInsets.only(right: 16),
                   child: InkWell(
                     child: loggedInUser.avatarUrl == 'none'
-                        ? const Icon(
+                        ? Icon(
                             Icons.account_circle,
                             size: 40,
-                            color: Colors.white,
+                            color: Colors.green[600],
                           )
                         : Container(
                             height: 40,
