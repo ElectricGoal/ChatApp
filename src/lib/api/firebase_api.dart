@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 import '../models/models.dart';
 
@@ -21,6 +22,19 @@ class FirebaseApi {
   }
 }
 
+bool compareDate(DateTime date) {
+  if (date.year != DateTime.now().year) {
+    return true;
+  }
+  if (date.month != DateTime.now().month) {
+    return true;
+  }
+  if (date.day != DateTime.now().day) {
+    return true;
+  }
+  return false;
+}
+
 class FirestoreDatabase {
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   late Stream<DocumentSnapshot<Map<String, dynamic>>> snapshot;
@@ -35,7 +49,6 @@ class FirestoreDatabase {
     required String currentUserId,
     required String title,
     required String img,
-
   }) async {
     Map<String, dynamic> chatRoomInfor = {
       'id': roomId,
@@ -46,15 +59,7 @@ class FirestoreDatabase {
       'time': DateTime.now(),
       'sendBy': 'none',
     };
-    // firebaseFirestore.collection('users').doc(currentUserId).update(
-    //   {
-    //     'chatRooms': FieldValue.arrayUnion(
-    //       [
-    //         chatRoomInfor,
-    //       ],
-    //     )
-    //   },
-    // );
+
     firebaseFirestore
         .collection('users')
         .doc(currentUserId)
@@ -100,19 +105,36 @@ class FirestoreDatabase {
     });
   }
 
-  void addMessage(messageMap, roomId) {
+  void addMessage(messageMap, roomId) async {
     DocumentReference docRef =
         firebaseFirestore.collection('chatRooms').doc(roomId);
+
+    DateTime lastTimeMessage = DateTime.now();
+    await docRef.get().then((value) {
+      try {
+        lastTimeMessage = (value['lastTimeMessage'] as Timestamp).toDate();
+        if (compareDate(lastTimeMessage)) {
+          docRef.update(
+            {'lastTimeMessage': messageMap['time']},
+          ).catchError((error) => print(error));
+
+          messageMap['header'] =
+              DateFormat('EEE, M/d/y').format(lastTimeMessage);
+        }
+      } catch (e) {
+        docRef.update(
+          {'lastTimeMessage': messageMap['time']},
+        ).catchError((error) => print(error));
+
+        messageMap['header'] = DateFormat('EEE, M/d/y').format(lastTimeMessage);
+      }
+    });
 
     docRef.collection('chats').add(messageMap).catchError(
       (e) {
         print(e.toString());
       },
     );
-
-    // docRef.update(
-    //   {'lastMessage': messageMap},
-    // ).catchError((error) => print(error));
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> getMessages(roomId) {
@@ -152,7 +174,6 @@ class FirestoreDatabase {
 
   Stream<DocumentSnapshot<Map<String, dynamic>>> getUserData() {
     User? user = FirebaseAuth.instance.currentUser;
-    //firebaseFirestore.collection("users").doc(user!.uid).get()
     return firebaseFirestore.collection("users").doc(user!.uid).snapshots();
   }
 
@@ -174,9 +195,6 @@ class FirestoreDatabase {
     bool existedChatRoom = false;
 
     final collRef = firebaseFirestore.collection('chatRooms');
-
-    // collRef.where('users',
-    //     arrayContains: firebaseFirestore.doc('users/' + user1Id!));
 
     await collRef.get().then(
       (QuerySnapshot querySnapshot) {
@@ -204,7 +222,7 @@ class FirestoreDatabase {
           'users': [
             firebaseFirestore.doc('users/' + user1Id!),
             firebaseFirestore.doc('users/' + user2Id!),
-          ]
+          ],
         })
         .then((value) => print("ChatRoom created"))
         .catchError((error) => print("Failed to add chatRoom: $error"));

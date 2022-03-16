@@ -40,6 +40,7 @@ class _ChatScreenState extends State<ChatScreen> {
         'message': _messageController.text,
         'sendBy': context.read<ProfileManager>().getUser.uid,
         'time': DateTime.now(),
+        'header': 'none',
       };
       lastMessageMap = messageMap;
       FirestoreDatabase().addMessage(messageMap, widget.roomId);
@@ -155,37 +156,34 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemBuilder: (context, index) {
                       Map<String, dynamic> message = snapshot.data!.docs[index]
                           .data() as Map<String, dynamic>;
-                      //print(data['message']);
+
                       bool isMe = message['sendBy'] == currentUserId;
                       DateTime dt = (message['time'] as Timestamp).toDate();
-                      //final DateFormat timeFormatter = DateFormat('jm');
-                      //final DateFormat dayFormatter = DateFormat('yyyy-MM-dd');
                       final String time = DateFormat('jm').format(dt);
-                      final String dayMessage =
-                          DateFormat('yyyy-MM-dd').format(dt);
-                      // print(dayMessage);
-                      // if (day != dayMessage) {
-                      //   //print(day);
-                      //   var messageWidget = Column(
-                      //     children: [
-                      //       Text(day),
-                      //       MessageTile(
-                      //         message: message['message'],
-                      //         isMe: isMe,
-                      //         avatar: widget.img,
-                      //         time: time,
-                      //       ),
-                      //     ],
-                      //   );
-                      //   day = dayMessage;
-                      //   return messageWidget;
-                      // }
-                      return MessageTile(
-                        message: message['message'],
-                        isMe: isMe,
-                        avatar: widget.img,
-                        time: time,
-                      );
+
+                      if (message['header'] == 'none') {
+                        return MessageTile(
+                          message: message['message'],
+                          isMe: isMe,
+                          avatar: widget.img,
+                          time: time,
+                        );
+                      } else{
+                        return Column(
+                          children: [
+                            Text(message['header']),
+                            const SizedBox(
+                              height: 8,
+                            ),
+                            MessageTile(
+                              message: message['message'],
+                              isMe: isMe,
+                              avatar: widget.img,
+                              time: time,
+                            )
+                          ],
+                        );
+                      }
                     },
                   );
                 } else {
