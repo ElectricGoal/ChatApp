@@ -22,7 +22,7 @@ class FirebaseApi {
   }
 }
 
-bool compareDate(DateTime date) {
+bool isNotToday(DateTime date) {
   if (date.year != DateTime.now().year) {
     return true;
   }
@@ -110,25 +110,45 @@ class FirestoreDatabase {
         firebaseFirestore.collection('chatRooms').doc(roomId);
 
     DateTime lastTimeMessage = DateTime.now();
-    await docRef.get().then((value) {
-      try {
-        lastTimeMessage = (value['lastTimeMessage'] as Timestamp).toDate();
-        if (compareDate(lastTimeMessage)) {
-          docRef.update(
-            {'lastTimeMessage': messageMap['time']},
-          ).catchError((error) => print(error));
+    //print(messageMap['time']);
+    await docRef.get().then(
+      (value) {
+        // try {
+        //   lastTimeMessage = (value['lastTimeMessage'] as Timestamp).toDate();
+        //   if (isNotToday(lastTimeMessage)) {
+        //     print("it not today");
+        //     docRef.update(
+        //       {'lastTimeMessage': messageMap['time']},
+        //     ).catchError((error) => print(error));
 
-          messageMap['header'] =
-              DateFormat('EEE, M/d/y').format(lastTimeMessage);
+        //     messageMap['header'] = DateFormat('EEE, M/d/y')
+        //         .format((messageMap['time'] as Timestamp).toDate());
+        //   }
+        // } catch (e) {
+        //   docRef.update(
+        //     {'lastTimeMessage': messageMap['time']},
+        //   ).catchError((error) => print(error));
+        //   print(2);
+        //   messageMap['header'] = DateFormat('EEE, M/d/y').format(lastTimeMessage);
+        // }
+        lastTimeMessage = (value['lastTimeMessage'] as Timestamp).toDate();
+        if (isNotToday(lastTimeMessage)) {
+          //print("it not today");
+          try {
+            messageMap['header'] = DateFormat('EEE, M/d/y')
+                .format((messageMap['time']))
+                .toString();
+          } catch (e) {
+            print(e);
+          }
         }
-      } catch (e) {
         docRef.update(
           {'lastTimeMessage': messageMap['time']},
         ).catchError((error) => print(error));
+      },
+    );
 
-        messageMap['header'] = DateFormat('EEE, M/d/y').format(lastTimeMessage);
-      }
-    });
+    //print(messageMap['header']);
 
     docRef.collection('chats').add(messageMap).catchError(
       (e) {
@@ -219,6 +239,7 @@ class FirestoreDatabase {
     DocumentReference docRef = collRef.doc();
     await docRef
         .set({
+          'lastTimeMessage': DateTime(2000, 1, 1),
           'users': [
             firebaseFirestore.doc('users/' + user1Id!),
             firebaseFirestore.doc('users/' + user2Id!),
